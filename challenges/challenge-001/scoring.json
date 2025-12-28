@@ -1,0 +1,8 @@
+{
+  "testsPath": "tests",
+  "maxZipBytes": 20971520,
+  "maxFileCount": 2000,
+  "installTimeoutMs": 240000,
+  "testTimeoutMs": 120000,
+  "totalTimeoutMs": 420000
+}

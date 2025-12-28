@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: gauntlet
+          POSTGRES_PASSWORD: gauntlet
+          POSTGRES_DB: gauntlet
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U gauntlet" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://gauntlet:gauntlet@localhost:5432/gauntlet
+      ADMIN_TOKEN: ci-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Prepare pnpm
+        run: corepack prepare pnpm@9.12.2 --activate
+      - name: Install dependencies
+        run: pnpm install
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test
+      - name: Apply schema
+        run: pnpm db:push
+      - name: Seed challenges
+        run: pnpm seed
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Playwright smoke tests
+        run: pnpm test:e2e

@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ChallengeVisibility {
+  PUBLIC
+  UNLISTED
+  DRAFT
+}
+
+enum MethodUsed {
+  VIBE
+  PRO
+  MIXED
+  OTHER
+}
+
+enum SubmitType {
+  GITHUB_REPO
+  ZIP_UPLOAD
+}
+
+enum SubmissionStatus {
+  QUEUED
+  RUNNING
+  COMPLETE
+  FAILED
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  COMPLETE
+  FAILED
+}
+
+enum JobType {
+  SCORE_SUBMISSION
+}
+
+model Challenge {
+  id               String               @id @default(cuid())
+  slug             String               @unique
+  title            String
+  shortDescription String
+  specMarkdownPath String
+  scoringConfig    Json
+  visibility       ChallengeVisibility  @default(PUBLIC)
+  createdAt        DateTime             @default(now())
+  submissions      Submission[]
+}
+
+model Submission {
+  id                   String           @id @default(cuid())
+  challengeId          String
+  challenge            Challenge        @relation(fields: [challengeId], references: [id])
+  displayName          String
+  methodUsed           MethodUsed
+  selfReportedMinutes  Int?
+  submitType           SubmitType
+  repoUrl              String?
+  zipPath              String?
+  status               SubmissionStatus @default(QUEUED)
+  result               Json?
+  logExcerpt           String?
+  commitHash           String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([challengeId, status])
+  @@index([challengeId, createdAt])
+}
+
+model Job {
+  id        String    @id @default(cuid())
+  type      JobType
+  payload   Json
+  status    JobStatus @default(QUEUED)
+  lockedAt  DateTime?
+  lockedBy  String?
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, createdAt])
+}
