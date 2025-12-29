@@ -464,6 +464,7 @@ async function main() {
   const webEnv = {
     DATABASE_URL: databaseUrl,
     ADMIN_TOKEN: process.env.ADMIN_TOKEN,
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   };
 
   const workerEnv = {
