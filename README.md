@@ -19,6 +19,13 @@ pnpm dev:worker
 
 Visit `http://localhost:3000`.
 
+To run the scorer locally, set these in `.env`:
+
+```bash
+WORKER_ENABLED="true"
+RUN_UNTRUSTED_CODE="true"
+```
+
 If port 5432 is already in use, start the DB on another port and update
 `DATABASE_URL` in `.env` to match:
 
@@ -91,6 +98,16 @@ GitHub Actions runs lint, typecheck, unit tests, and Playwright smoke tests agai
 ## Security Disclaimer
 
 The local runner executes untrusted code. v0.1 mitigations include timeouts, file limits, and log truncation, but this is not a hardened sandbox. See `docs/SECURITY.md` for details and future hardening.
+
+## Scoring Safety Switch
+
+Scoring is gated behind two explicit env vars:
+
+- `WORKER_ENABLED` must be `"true"` for the worker to run at all.
+- `RUN_UNTRUSTED_CODE` must be `"true"` to allow executing submissions.
+
+To pause scoring immediately, set either variable to `"false"` and redeploy the worker.
+Keep secrets out of the worker environment whenever untrusted execution is enabled.
 
 ## Docs
 
