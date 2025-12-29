@@ -14,12 +14,18 @@ export default async function SubmissionPage({ params }: PageProps) {
   const submissionId = resolvedParams?.id;
   if (!submissionId) return notFound();
 
-  const submission = await prisma.submission.findUnique({
-    where: { id: submissionId },
-    include: { challenge: true },
-  });
+  let submission;
+  try {
+    submission = await prisma.submission.findUnique({
+      where: { id: submissionId },
+      include: { challenge: true },
+    });
+  } catch (error) {
+    console.error('Failed to load submission', error);
+    return notFound();
+  }
 
-  if (!submission) return notFound();
+  if (!submission || !submission.challenge) return notFound();
 
   const result = (submission.result ?? {}) as {
     passRate?: number;
