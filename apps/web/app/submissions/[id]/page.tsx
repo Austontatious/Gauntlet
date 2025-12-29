@@ -5,9 +5,17 @@ import { prisma } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export default async function SubmissionPage({ params }: { params: { id: string } }) {
+type PageProps = {
+  params: { id: string } | Promise<{ id: string }>;
+};
+
+export default async function SubmissionPage({ params }: PageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const submissionId = resolvedParams?.id;
+  if (!submissionId) return notFound();
+
   const submission = await prisma.submission.findUnique({
-    where: { id: params.id },
+    where: { id: submissionId },
     include: { challenge: true },
   });
 

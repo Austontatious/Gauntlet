@@ -6,15 +6,19 @@ import { getLeaderboardBySlug } from '@/lib/leaderboard';
 
 export const dynamic = 'force-dynamic';
 
-export default async function LeaderboardPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const data = await getChallengeBySlug(params.slug);
+type PageProps = {
+  params: { slug: string } | Promise<{ slug: string }>;
+};
+
+export default async function LeaderboardPage({ params }: PageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const slug = resolvedParams?.slug;
+  if (!slug) return notFound();
+
+  const data = await getChallengeBySlug(slug);
   if (!data) return notFound();
 
-  const leaderboard = await getLeaderboardBySlug(params.slug);
+  const leaderboard = await getLeaderboardBySlug(slug);
 
   return (
     <main className="px-6 pb-16 md:px-12">
