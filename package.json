@@ -27,6 +27,8 @@
     "create-challenge": "tsx scripts/create-challenge.ts",
     "render:deploy": "node scripts/render/deploy.mjs",
     "render:deploy:dry": "node scripts/render/deploy.mjs --dry-run",
+    "render:migrate": "node scripts/render/migrate.mjs",
+    "render:migrate:dry": "node scripts/render/migrate.mjs --dry-run",
     "render:pause": "node scripts/render/deploy.mjs --worker-enabled=false",
     "render:resume": "node scripts/render/deploy.mjs --worker-enabled=true --run-untrusted=true"
   },

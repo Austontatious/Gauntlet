@@ -13,6 +13,7 @@
 - Deploy: services updated, deploys triggered, both web + worker reached `live`.
 - Pause: worker env updated with `WORKER_ENABLED=false`, deploys reached `live`.
 - Resume: worker env updated with `WORKER_ENABLED=true` and `RUN_UNTRUSTED_CODE=true`, deploys reached `live`.
+- Migrate job: `gauntlet-migrate` created, ran `pnpm db:deploy && pnpm seed`, then deleted; worker redeployed and reached `live`.
 
 Web URL: https://gauntlet-web.onrender.com
 
