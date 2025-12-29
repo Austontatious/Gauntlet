@@ -36,7 +36,7 @@ export default async function ChallengesPage() {
                 href={`/challenges/${challenge.slug}`}
                 className="text-sm font-semibold text-amber-600 hover:text-amber-500"
               >
-                View challenge ->
+                View challenge -&gt;
               </a>
             </Card>
           ))}

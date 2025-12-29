@@ -1,13 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getChallengeBySlug } from '@/lib/challenges';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(
-  _request: Request,
-  { params }: { params: { slug: string } },
+  _request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
 ) {
-  const data = await getChallengeBySlug(params.slug);
+  const { slug } = await params;
+  const data = await getChallengeBySlug(slug);
 
   if (!data) {
     return NextResponse.json({ error: 'Challenge not found' }, { status: 404 });

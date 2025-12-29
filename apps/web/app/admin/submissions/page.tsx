@@ -10,7 +10,7 @@ export default async function AdminSubmissionsPage({
 }: {
   searchParams: { token?: string; status?: string };
 }) {
-  const headerList = headers();
+  const headerList = await headers();
   const token = searchParams.token || headerList.get('x-admin-token');
 
   if (!token || token !== process.env.ADMIN_TOKEN) {

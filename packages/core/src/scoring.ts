@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { SubmissionResult, TestOutput } from './types';
+import type { SubmissionResult, TestOutput } from './types.js';
 
 const testOutputSchema = z.object({
   testsTotal: z.number().int().nonnegative(),

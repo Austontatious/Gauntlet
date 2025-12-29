@@ -1,3 +1,3 @@
-export * from './leaderboard';
-export * from './scoring';
-export * from './types';
+export * from './leaderboard.js';
+export * from './scoring.js';
+export * from './types.js';

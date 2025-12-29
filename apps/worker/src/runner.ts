@@ -5,9 +5,9 @@ import { spawnSync } from 'node:child_process';
 import AdmZip from 'adm-zip';
 import type { Challenge, Submission } from '@prisma/client';
 import { buildSubmissionResult, parseTestOutput } from '@gauntlet/core';
-import { runCommand } from './utils/command';
-import { copyDir, ensureDir, tailLines } from './utils/files';
-import { resolveRepoRoot } from './utils/paths';
+import { runCommand } from './utils/command.js';
+import { copyDir, ensureDir, tailLines } from './utils/files.js';
+import { resolveRepoRoot } from './utils/paths.js';
 
 interface ScoringConfig {
   testsPath: string;

@@ -55,7 +55,7 @@ export default async function ChallengeDetailPage({
                 className="text-sm font-semibold text-amber-600"
                 href={`/challenges/${params.slug}/leaderboard`}
               >
-                Full board ->
+                Full board -&gt;
               </a>
             </div>
             <div className="mt-4 space-y-3">

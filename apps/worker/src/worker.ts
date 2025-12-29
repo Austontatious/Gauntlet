@@ -1,6 +1,7 @@
 import os from 'node:os';
-import { prisma } from './db';
-import { scoreSubmission } from './runner';
+import { Prisma } from '@prisma/client';
+import { prisma } from './db.js';
+import { scoreSubmission } from './runner.js';
 
 interface WorkerOptions {
   intervalMs: number;
@@ -96,14 +97,14 @@ async function handleJob(jobId: string) {
         status: 'FAILED',
         logExcerpt: scored.logExcerpt,
         result: scored.errorSummary
-          ? {
+          ? ({
               passRate: 0,
               testsPassed: 0,
               testsTotal: 0,
               runtimeMs: 0,
               errorSummary: scored.errorSummary,
-            }
-          : null,
+            } as Prisma.InputJsonValue)
+          : Prisma.DbNull,
         commitHash: scored.commitHash,
       },
     });
@@ -120,7 +121,7 @@ async function handleJob(jobId: string) {
     where: { id: submissionId },
     data: {
       status: 'COMPLETE',
-      result: scored.result,
+      result: scored.result as unknown as Prisma.InputJsonValue,
       logExcerpt: scored.logExcerpt,
       commitHash: scored.commitHash,
     },

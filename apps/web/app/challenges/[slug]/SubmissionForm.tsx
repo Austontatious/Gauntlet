@@ -2,6 +2,7 @@
 
 import type { FormEvent } from 'react';
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,7 +49,7 @@ export function SubmissionForm({ challengeSlug }: { challengeSlug: string }) {
       setSubmissionId(payload.id);
       event.currentTarget.reset();
       setSubmitType('GITHUB_REPO');
-    } catch (error) {
+    } catch {
       setStatus('Submission failed.');
     }
   }
@@ -129,12 +130,12 @@ export function SubmissionForm({ challengeSlug }: { challengeSlug: string }) {
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
           <p>{status}</p>
           {submissionId ? (
-            <a
+            <Link
               href={`/submissions/${submissionId}`}
               className="mt-2 inline-flex text-sm font-semibold text-amber-600"
             >
-              View submission ->
-            </a>
+              View submission -&gt;
+            </Link>
           ) : null}
         </div>
       )}
