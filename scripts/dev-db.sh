@@ -5,7 +5,7 @@ CONTAINER_NAME="gauntlet-postgres"
 POSTGRES_USER="gauntlet"
 POSTGRES_PASSWORD="gauntlet"
 POSTGRES_DB="gauntlet"
-PORT="5432"
+PORT="${PORT:-5432}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is required to run the dev database." >&2
@@ -27,4 +27,3 @@ docker run -d \
   -e POSTGRES_DB="${POSTGRES_DB}" \
   -p "${PORT}:5432" \
   postgres:16
-

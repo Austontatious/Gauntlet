@@ -10,13 +10,21 @@ corepack prepare pnpm@9.12.2 --activate
 pnpm install
 cp .env.example .env
 ./scripts/dev-db.sh
-pnpm db:push
+pnpm db:generate
+pnpm db:migrate
 pnpm seed
 pnpm dev:web
 pnpm dev:worker
 ```
 
 Visit `http://localhost:3000`.
+
+If port 5432 is already in use, start the DB on another port and update
+`DATABASE_URL` in `.env` to match:
+
+```bash
+PORT=5433 ./scripts/dev-db.sh
+```
 
 ## Environment Variables
 
@@ -28,9 +36,35 @@ Visit `http://localhost:3000`.
 
 ## Database
 
-- `pnpm db:push` -- apply schema to dev DB.
-- `pnpm db:migrate` -- create a migration (optional in v0.1).
+- `pnpm db:migrate` -- create/apply migrations in dev.
+- `pnpm db:deploy` -- apply migrations (prod).
 - `pnpm db:studio` -- inspect DB.
+
+## Local Smoke Test
+
+With the web + worker running, submit the included fixture and watch status move
+from QUEUED to RUNNING to COMPLETE/FAILED.
+
+```bash
+python3 - <<'PY'
+import zipfile
+with zipfile.ZipFile('/tmp/gauntlet-solution.zip', 'w') as z:
+    z.write(
+        'challenges/fixtures/challenge-001-solution/src/solution.js',
+        'src/solution.js',
+    )
+PY
+curl -s \\
+  -F "challengeSlug=challenge-001" \\
+  -F "displayName=Local Smoke" \\
+  -F "methodUsed=VIBE" \\
+  -F "submitType=ZIP_UPLOAD" \\
+  -F "zipFile=@/tmp/gauntlet-solution.zip" \\
+  http://localhost:3000/api/submissions
+
+# Poll until status is COMPLETE or FAILED.
+curl -s http://localhost:3000/api/submissions/<id>
+```
 
 ## Challenges
 
