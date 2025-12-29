@@ -40,12 +40,13 @@ async function fetchChallenge(slug: string) {
   return (await response.json()) as ChallengeResponse;
 }
 
-export default async function ChallengeDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const slug = params?.slug;
+type PageProps = {
+  params: { slug: string } | Promise<{ slug: string }>;
+};
+
+export default async function ChallengeDetailPage({ params }: PageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const slug = resolvedParams?.slug;
   if (!slug) return notFound();
 
   const data = await fetchChallenge(slug);
@@ -86,7 +87,7 @@ export default async function ChallengeDetailPage({
               Submit a public GitHub repo or a ZIP. The worker will score it in the background.
             </p>
             <div className="mt-6">
-              <SubmissionForm challengeSlug={params.slug} />
+              <SubmissionForm challengeSlug={slug} />
             </div>
           </Card>
 
@@ -95,7 +96,7 @@ export default async function ChallengeDetailPage({
               <h2 className="text-lg font-semibold text-slate-900">Leaderboard preview</h2>
               <a
                 className="text-sm font-semibold text-amber-600"
-                href={`/challenges/${params.slug}/leaderboard`}
+                href={`/challenges/${slug}/leaderboard`}
               >
                 Full board -&gt;
               </a>
