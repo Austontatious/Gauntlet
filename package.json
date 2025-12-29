@@ -28,7 +28,7 @@
     "render:deploy": "node scripts/render/deploy.mjs",
     "render:deploy:dry": "node scripts/render/deploy.mjs --dry-run",
     "render:pause": "node scripts/render/deploy.mjs --worker-enabled=false",
-    "render:resume": "node scripts/render/deploy.mjs --worker-enabled=true"
+    "render:resume": "node scripts/render/deploy.mjs --worker-enabled=true --run-untrusted=true"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

@@ -196,11 +196,22 @@ async function triggerDeploy(service, dryRun) {
     return null;
   }
 
+  const startedAt = new Date();
   const deploy = await fetchJson(`/services/${service.id}/deploys`, {
     method: 'POST',
   });
-  console.log(`Deploy started for ${service.name}: ${deploy.id}`);
-  return deploy.id;
+
+  if (deploy?.id) {
+    console.log(`Deploy started for ${service.name}: ${deploy.id}`);
+    return deploy.id;
+  }
+
+  const fallbackId = await findLatestDeployId(service, startedAt);
+  if (!fallbackId) {
+    throw new Error(`Deploy triggered for ${service.name} but no deploy id returned.`);
+  }
+  console.log(`Deploy started for ${service.name}: ${fallbackId} (fallback)`);
+  return fallbackId;
 }
 
 async function waitForDeploy(service, deployId) {
@@ -232,6 +243,31 @@ async function waitForDeploy(service, deployId) {
   throw new Error(`Timed out waiting for deploy ${deployId} (${service.name})`);
 }
 
+async function findLatestDeployId(service, since) {
+  const deploys = await fetchJson(`/services/${service.id}/deploys?limit=20`);
+  if (!Array.isArray(deploys) || deploys.length === 0) {
+    return null;
+  }
+
+  const items = deploys
+    .map((item) => item.deploy)
+    .filter((deploy) => deploy && deploy.createdAt);
+
+  if (items.length === 0) return null;
+
+  const sinceMs = since ? since.getTime() - 5000 : 0;
+  const filtered = items.filter(
+    (deploy) => new Date(deploy.createdAt).getTime() >= sinceMs,
+  );
+  const candidates = filtered.length ? filtered : items;
+
+  candidates.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+
+  return candidates[0]?.id ?? null;
+}
+
 async function ensureService(
   services,
   name,
@@ -258,8 +294,15 @@ async function ensureService(
     }),
   });
 
-  console.log(`Created service ${name} (${created.id})`);
-  return created;
+  const service = created?.service ?? created;
+  if (!service?.id) {
+    throw new Error(`Create service response missing id for ${name}`);
+  }
+  if (created?.deployId) {
+    console.log(`Create deploy queued for ${name}: ${created.deployId}`);
+  }
+  console.log(`Created service ${name} (${service.id})`);
+  return service;
 }
 
 async function ensurePostgres(databases, name, ownerId, payload, dryRun) {
@@ -318,7 +361,7 @@ async function main() {
   const repoBranch = process.env.RENDER_REPO_BRANCH || 'main';
   const region = process.env.RENDER_REGION || 'oregon';
   const servicePlan = process.env.RENDER_SERVICE_PLAN || 'starter';
-  const postgresPlan = process.env.RENDER_POSTGRES_PLAN || 'starter';
+  const postgresPlan = process.env.RENDER_POSTGRES_PLAN || 'free';
   const postgresVersion = process.env.RENDER_POSTGRES_VERSION || '16';
 
   const owners = await listAll('/owners', 'owner');
