@@ -15,11 +15,11 @@ type ChallengeResponse = {
   specMarkdown: string | null;
 };
 
-function resolveBaseUrl() {
+async function resolveBaseUrl() {
   const explicit = process.env.NEXT_PUBLIC_BASE_URL;
   if (explicit) return explicit.replace(/\/$/, '');
 
-  const headerList = headers();
+  const headerList = await headers();
   const host = headerList.get('x-forwarded-host') ?? headerList.get('host');
   if (!host) return '';
 
@@ -28,7 +28,7 @@ function resolveBaseUrl() {
 }
 
 async function fetchChallenge(slug: string) {
-  const baseUrl = resolveBaseUrl();
+  const baseUrl = await resolveBaseUrl();
   if (!baseUrl) return null;
 
   const response = await fetch(`${baseUrl}/api/challenges/${slug}`, {
@@ -51,7 +51,7 @@ export default async function ChallengeDetailPage({
   const data = await fetchChallenge(slug);
   if (!data) return notFound();
 
-  let leaderboard = [];
+  let leaderboard: Awaited<ReturnType<typeof getLeaderboardBySlug>> = [];
   try {
     leaderboard = await getLeaderboardBySlug(slug);
   } catch {
