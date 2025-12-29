@@ -1,38 +1,80 @@
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getChallengeBySlug } from '@/lib/challenges';
+import { Card } from '@/components/ui/card';
+import { Markdown } from '@/components/Markdown';
 import { getLeaderboardBySlug } from '@/lib/leaderboard';
 import { SubmissionForm } from './SubmissionForm';
 
 export const dynamic = 'force-dynamic';
+
+type ChallengeResponse = {
+  slug: string;
+  title: string;
+  shortDescription: string | null;
+  specMarkdown: string | null;
+};
+
+function resolveBaseUrl() {
+  const explicit = process.env.NEXT_PUBLIC_BASE_URL;
+  if (explicit) return explicit.replace(/\/$/, '');
+
+  const headerList = headers();
+  const host = headerList.get('x-forwarded-host') ?? headerList.get('host');
+  if (!host) return '';
+
+  const proto = headerList.get('x-forwarded-proto') ?? 'http';
+  return `${proto}://${host}`;
+}
+
+async function fetchChallenge(slug: string) {
+  const baseUrl = resolveBaseUrl();
+  if (!baseUrl) return null;
+
+  const response = await fetch(`${baseUrl}/api/challenges/${slug}`, {
+    cache: 'no-store',
+  });
+
+  if (!response.ok) return null;
+
+  return (await response.json()) as ChallengeResponse;
+}
 
 export default async function ChallengeDetailPage({
   params,
 }: {
   params: { slug: string };
 }) {
-  const data = await getChallengeBySlug(params.slug);
+  const slug = params?.slug;
+  if (!slug) return notFound();
+
+  const data = await fetchChallenge(slug);
   if (!data) return notFound();
 
-  const leaderboard = await getLeaderboardBySlug(params.slug);
+  let leaderboard = [];
+  try {
+    leaderboard = await getLeaderboardBySlug(slug);
+  } catch {
+    leaderboard = [];
+  }
 
   return (
     <main className="px-6 pb-16 md:px-12">
       <section className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-8">
           <div>
-            <Badge>{data.challenge.slug}</Badge>
+            <Badge>{data.slug}</Badge>
             <h1 className="mt-4 text-3xl font-semibold text-slate-950 md:text-4xl">
-              {data.challenge.title}
+              {data.title}
             </h1>
-            <p className="mt-2 text-sm text-slate-600">{data.challenge.shortDescription}</p>
+            {data.shortDescription ? (
+              <p className="mt-2 text-sm text-slate-600">{data.shortDescription}</p>
+            ) : null}
           </div>
 
           <Card className="text-sm text-slate-700">
             <div className="markdown">
-              <ReactMarkdown>{data.specMarkdown}</ReactMarkdown>
+              <Markdown content={data.specMarkdown ?? ''} />
             </div>
           </Card>
         </div>
