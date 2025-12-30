@@ -16,6 +16,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const requestUrl = new URL(request.url);
+  const clearSlug = requestUrl.searchParams.get('clearSlug')?.trim() || null;
+
   const repoRoot = resolveRepoRoot();
   const challengeDir = path.resolve(repoRoot, 'challenges/challenge-001');
   const specPath = path.join(challengeDir, 'spec.md');
@@ -116,5 +119,20 @@ export async function POST(request: Request) {
     updated: updateResults[index]?.count ?? 0,
   }));
 
-  return NextResponse.json({ ok: true, updated });
+  let clearedCount = 0;
+  if (clearSlug) {
+    const challenge = await prisma.challenge.findUnique({ where: { slug: clearSlug } });
+    if (challenge) {
+      const result = await prisma.submission.deleteMany({
+        where: { challengeId: challenge.id },
+      });
+      clearedCount = result.count;
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    updated,
+    cleared: clearSlug ? { slug: clearSlug, deleted: clearedCount } : null,
+  });
 }
