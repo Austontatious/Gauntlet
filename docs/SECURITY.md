@@ -1,8 +1,17 @@
 # Security
 
-Gauntlet v0.1 executes untrusted code. Scoring is **disabled by default** and must be
-explicitly enabled with `WORKER_ENABLED=true` and `RUN_UNTRUSTED_CODE=true`.
-This is a process-level guardrail, not a hardened production isolation boundary.
+## Threat Model (v0.1)
+
+Gauntlet v0.1 executes **untrusted code** with a “Render-only, risk accepted”
+posture:
+
+- Runner executes in a **separate private Render service** (blast radius reduction).
+- Runner uses **process-level guardrails** (timeouts, file limits, log caps,
+  best-effort network disabling).
+
+**This is not a hardened sandbox.** A determined attacker may still break out
+via runtime or dependency exploits. If you are not comfortable with that risk,
+do not run the runner against public untrusted submissions.
 
 ## Threat Model
 
@@ -18,9 +27,11 @@ This is a process-level guardrail, not a hardened production isolation boundary.
 - Temp workspace per job under `RUNS_DIR`, deleted after scoring.
 - ZIP size + unzipped size + file count limits.
 - Hard runtime timeout plus watchdog cancellation for stale jobs.
+- DB polling uses atomic job claims to prevent double execution.
 - Bounded concurrency via `WORKER_MAX_CONCURRENCY`.
 - Submission rate limiting (per IP + per display name).
 - Log capture capped at ~64KB per job and truncated.
+- Runner receives a minimal env allowlist (no `ADMIN_TOKEN` or Render API key).
 
 ## Known Gaps
 

@@ -1,4 +1,5 @@
 import os from 'node:os';
+import { randomUUID } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { prisma } from './db.js';
 import { scoreSubmission } from './runner.js';
@@ -12,6 +13,7 @@ interface WorkerOptions {
 
 const CANCEL_GRACE_MS = 1000;
 const activeControllers = new Map<string, AbortController>();
+const RUNNER_ID = process.env.RUNNER_ID || `${os.hostname()}:${process.pid}:${randomUUID()}`;
 
 async function markJobFailed(
   jobId: string,
@@ -119,11 +121,11 @@ export async function startWorker({
           data: {
             status: 'RUNNING',
             lockedAt: startedAt,
-            lockedBy: host,
+            lockedBy: RUNNER_ID,
             attempts: { increment: 1 },
             startedAt,
             timeoutAt,
-            runnerHandle: `${host}:${process.pid}`,
+            runnerHandle: RUNNER_ID,
           },
         });
 
@@ -147,7 +149,11 @@ export async function startWorker({
 
   await poll();
   setInterval(poll, intervalMs);
-  setInterval(() => watchdog(maxRuntimeMs), watchdogIntervalMs);
+  setInterval(() => {
+    watchdog(maxRuntimeMs).catch((error) => {
+      console.error('Watchdog error', error);
+    });
+  }, watchdogIntervalMs);
 }
 
 async function watchdog(maxRuntimeMs: number) {

@@ -1,6 +1,61 @@
 #!/usr/bin/env node
 
+/**
+ * Render deploy automation for Gauntlet.
+ *
+ * v0.1 model:
+ *  - gauntlet-web (public): Next.js app + API
+ *  - gauntlet-runner (private): DB polling runner only (no public URL)
+ *
+ * Critical: runner MUST NOT receive privileged env vars (ADMIN_TOKEN, RENDER_API_KEY, etc).
+ */
+
 const API_BASE = 'https://api.render.com/v1';
+
+const WEB_ENV_ALLOWLIST = new Set([
+  'DATABASE_URL',
+  'ADMIN_TOKEN',
+  'NEXT_PUBLIC_BASE_URL',
+  'UPLOADS_DIR',
+  'RUNS_DIR',
+  'WORKER_POLL_INTERVAL_MS',
+  'WORKER_MAX_CONCURRENCY',
+  'WORKER_WATCHDOG_INTERVAL_MS',
+  'MAX_JOB_RUNTIME_MS',
+  'MAX_ZIP_BYTES',
+  'MAX_UNZIPPED_BYTES',
+  'MAX_FILE_COUNT',
+  'MAX_LOG_BYTES',
+  'WORKER_ENABLED',
+  'RUN_UNTRUSTED_CODE',
+  'SUBMISSION_RATE_LIMIT_IP',
+  'SUBMISSION_RATE_LIMIT_USER',
+]);
+
+const RUNNER_ENV_ALLOWLIST = new Set([
+  'DATABASE_URL',
+  'RUNS_DIR',
+  'WORKER_POLL_INTERVAL_MS',
+  'WORKER_MAX_CONCURRENCY',
+  'WORKER_WATCHDOG_INTERVAL_MS',
+  'MAX_JOB_RUNTIME_MS',
+  'MAX_ZIP_BYTES',
+  'MAX_UNZIPPED_BYTES',
+  'MAX_FILE_COUNT',
+  'MAX_LOG_BYTES',
+  'WORKER_ENABLED',
+  'RUN_UNTRUSTED_CODE',
+]);
+
+function pickEnv(allowlist) {
+  const out = {};
+  for (const key of allowlist) {
+    const value = process.env[key];
+    if (value === undefined || value === null || value === '') continue;
+    out[key] = value;
+  }
+  return out;
+}
 
 function parseArgs(argv) {
   const out = {
@@ -465,31 +520,22 @@ async function main() {
   );
 
   const webEnv = {
+    ...pickEnv(WEB_ENV_ALLOWLIST),
     DATABASE_URL: databaseUrl,
-    ADMIN_TOKEN: process.env.ADMIN_TOKEN,
-    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
     WORKER_ENABLED: workerEnabled,
     RUN_UNTRUSTED_CODE: runUntrusted,
-    MAX_ZIP_BYTES: process.env.MAX_ZIP_BYTES,
-    MAX_UNZIPPED_BYTES: process.env.MAX_UNZIPPED_BYTES,
-    MAX_FILE_COUNT: process.env.MAX_FILE_COUNT,
-    MAX_JOB_RUNTIME_MS: process.env.MAX_JOB_RUNTIME_MS,
-    WORKER_MAX_CONCURRENCY: process.env.WORKER_MAX_CONCURRENCY,
-    MAX_LOG_BYTES: process.env.MAX_LOG_BYTES,
   };
 
   const runnerEnv = {
+    ...pickEnv(RUNNER_ENV_ALLOWLIST),
     DATABASE_URL: databaseUrl,
     WORKER_ENABLED: workerEnabled,
     RUN_UNTRUSTED_CODE: runUntrusted,
-    WORKER_MAX_CONCURRENCY: process.env.WORKER_MAX_CONCURRENCY,
-    WORKER_POLL_INTERVAL_MS: process.env.WORKER_POLL_INTERVAL_MS,
-    MAX_JOB_RUNTIME_MS: process.env.MAX_JOB_RUNTIME_MS,
-    MAX_ZIP_BYTES: process.env.MAX_ZIP_BYTES,
-    MAX_UNZIPPED_BYTES: process.env.MAX_UNZIPPED_BYTES,
-    MAX_FILE_COUNT: process.env.MAX_FILE_COUNT,
-    MAX_LOG_BYTES: process.env.MAX_LOG_BYTES,
   };
+
+  if ('ADMIN_TOKEN' in runnerEnv) {
+    delete runnerEnv.ADMIN_TOKEN;
+  }
 
   console.log(`Web service: ${webService.name} (${webService.id})`);
   console.log(`Runner service: ${runnerService.name} (${runnerService.id})`);

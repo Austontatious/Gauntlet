@@ -1,5 +1,24 @@
 # Runner
 
+Gauntlet v0.1 executes untrusted submissions using a separate **private Render
+service** (`gauntlet-runner`) that **polls Postgres for queued jobs**. There is
+no web-to-runner RPC in v0.1.
+
+## Services
+
+- `gauntlet-web` (public): Next.js UI + API (accepts submissions, writes jobs)
+- `gauntlet-runner` (private): polling daemon that claims jobs and executes tests
+
+## Secrets Hygiene
+
+The runner service must receive **only**:
+
+- `DATABASE_URL`
+- runner flags/limits (see below)
+
+The runner must **not** receive privileged secrets such as `ADMIN_TOKEN` or
+Render API credentials.
+
 ## Local Runner (v0.1)
 
 The runner scores submissions in a private service with process-level guardrails.
@@ -30,6 +49,16 @@ The reporter writes JSON to `GAUNTLET_TEST_OUTPUT` for parsing.
 - Log capture limit: `MAX_LOG_BYTES` (default 65536)
 
 These values are configurable per challenge in `scoring.json`.
+
+## What "Sandbox" Means in v0.1
+
+v0.1 is **not a hardened sandbox**. The isolation boundary is:
+
+1. Separate Render service (blast radius reduction).
+2. Process-level guardrails (timeouts, best-effort network disable, zip validation,
+   log caps).
+
+If you need VM-grade isolation (gVisor/Firecracker), that is a future milestone.
 
 ### Sandbox Details
 

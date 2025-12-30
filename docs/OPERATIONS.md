@@ -1,5 +1,27 @@
 # Operations
 
+## Render Deployment Topology (v0.1)
+
+You will deploy two services:
+
+1. `gauntlet-web` (public)
+2. `gauntlet-runner` (private, no public URL)
+
+The runner polls Postgres for queued jobs and writes results back to the DB.
+
+### Runner Env Requirements (Minimal)
+
+Runner must have only:
+
+- `DATABASE_URL`
+- runner flags/limits (`WORKER_ENABLED`, `RUN_UNTRUSTED_CODE`, etc.)
+
+Runner must not have:
+
+- `ADMIN_TOKEN`
+- Render API keys
+- any other privileged secrets
+
 ## Environment Variables
 
 - `DATABASE_URL` -- Postgres connection string.
