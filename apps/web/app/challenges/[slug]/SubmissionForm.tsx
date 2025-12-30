@@ -26,10 +26,11 @@ export function SubmissionForm({ challengeSlug }: { challengeSlug: string }) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setStatus('Submitting...');
     setSubmissionId(null);
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
     formData.set('challengeSlug', challengeSlug);
 
     try {
@@ -38,18 +39,33 @@ export function SubmissionForm({ challengeSlug }: { challengeSlug: string }) {
         body: formData,
       });
 
-      const payload = await response.json();
+      let payload: { error?: string; id?: string } = {};
+      try {
+        payload = await response.json();
+      } catch (error) {
+        console.error('Failed to parse submission response', error);
+        setStatus('Submission failed.');
+        return;
+      }
 
       if (!response.ok) {
         setStatus(payload?.error || 'Submission failed');
         return;
       }
 
+      if (!payload.id) {
+        setStatus('Submission failed.');
+        return;
+      }
+
       setStatus('Queued for scoring.');
       setSubmissionId(payload.id);
-      event.currentTarget.reset();
+      if (form && typeof form.reset === 'function') {
+        form.reset();
+      }
       setSubmitType('GITHUB_REPO');
     } catch {
+      console.error('Submission request failed');
       setStatus('Submission failed.');
     }
   }
