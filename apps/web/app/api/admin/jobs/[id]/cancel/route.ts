@@ -25,14 +25,16 @@ export async function POST(
     // No body provided.
   }
 
-  const job = await prisma.job.findUnique({ where: { id } });
+  const job = await prisma.job.findFirst({
+    where: { id, status: { in: ['QUEUED', 'RUNNING'] } },
+  });
   if (!job) {
     return NextResponse.json({ error: 'Job not found' }, { status: 404 });
   }
 
-  if (job.status === 'COMPLETE' || job.status === 'FAILED' || job.status === 'TIMEOUT') {
-    return NextResponse.json({ status: job.status });
-  }
+  // job.status is intentionally narrowed to QUEUED/RUNNING by the query context.
+  // Terminal states are not returned here. "TIMEOUT" is not a distinct status in practice;
+  // timeouts are recorded as FAILED with an error message.
 
   await prisma.job.update({
     where: { id },
