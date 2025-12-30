@@ -230,6 +230,24 @@ export async function scoreSubmission(
         : `Tests failed${testCommand.timedOut ? ' (timeout)' : ''}`;
 
     const parsed = parseTestOutput(rawOutput);
+    const summaryLines = [
+      '',
+      'Gauntlet test summary',
+      `Tests passed: ${parsed.testsPassed}/${parsed.testsTotal}`,
+      `Runtime: ${testCommand.durationMs}ms`,
+      errorSummary ? `Status: ${errorSummary}` : 'Status: OK',
+    ];
+
+    if (parsed.failures?.length) {
+      summaryLines.push('Failures:');
+      for (const failure of parsed.failures) {
+        const name = failure.name ?? 'Unnamed test';
+        const message = failure.message ?? 'No message';
+        summaryLines.push(`- ${name}: ${message}`);
+      }
+    }
+
+    logBuffer += `${summaryLines.join('\n')}\n`;
     const result = buildSubmissionResult(parsed, testCommand.durationMs, errorSummary);
 
     return {
