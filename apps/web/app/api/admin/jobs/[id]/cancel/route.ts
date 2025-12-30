@@ -36,12 +36,18 @@ export async function POST(
   // Terminal states are not returned here. "TIMEOUT" is not a distinct status in practice;
   // timeouts are recorded as FAILED with an error message.
 
+  const cancelMessage = reason?.trim()
+    ? `Canceled by admin: ${reason.trim()}`
+    : 'Canceled by admin';
+
   await prisma.job.update({
     where: { id },
     data: {
-      status: 'CANCELED',
-      cancelReason: reason,
-      finishedAt: null,
+      // v0.1: no dedicated CANCELED status in schema.
+      // Treat admin-initiated cancellation as a terminal FAILED with a clear reason.
+      status: 'FAILED',
+      cancelReason: cancelMessage,
+      finishedAt: new Date(),
     },
   });
 
@@ -56,11 +62,11 @@ export async function POST(
           testsPassed: 0,
           testsTotal: 0,
           runtimeMs: 0,
-          errorSummary: reason,
+          errorSummary: cancelMessage,
         } as Prisma.InputJsonValue,
       },
     });
   }
 
-  return NextResponse.json({ status: 'CANCELED' });
+  return NextResponse.json({ status: 'FAILED', errorSummary: cancelMessage });
 }
