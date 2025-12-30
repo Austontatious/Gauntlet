@@ -43,6 +43,9 @@ PORT=5433 ./scripts/dev-db.sh
 - `WORKER_MAX_CONCURRENCY` -- max concurrent jobs per worker.
 - `WORKER_WATCHDOG_INTERVAL_MS` -- watchdog interval for stale jobs.
 - `MAX_JOB_RUNTIME_MS` -- hard runtime cap per job.
+- `MAX_ZIP_BYTES` -- upload size cap.
+- `MAX_UNZIPPED_BYTES` -- extracted size cap.
+- `MAX_FILE_COUNT` -- max files per submission.
 - `WORKER_ENABLED` -- master kill switch for the worker.
 - `RUN_UNTRUSTED_CODE` -- explicit allow for execution.
 - `SUBMISSION_RATE_LIMIT_IP` -- per-IP submission cap.

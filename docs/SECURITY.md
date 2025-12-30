@@ -20,7 +20,7 @@ This is a baseline sandbox, not a hardened production isolation boundary.
 - Hard runtime timeout plus watchdog cancellation for stale jobs.
 - Bounded concurrency via `WORKER_MAX_CONCURRENCY`.
 - Submission rate limiting (per IP + per display name).
-- Log excerpt truncation to a fixed number of lines.
+- Log capture capped at ~64KB per job and truncated.
 
 ## Known Gaps
 

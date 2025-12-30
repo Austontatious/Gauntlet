@@ -113,7 +113,16 @@ Returns execution status for the scorer.
 
 Response:
 ```json
-{ "executionEnabled": false }
+{
+  "executionEnabled": false,
+  "limits": {
+    "maxJobRuntimeMs": 5000,
+    "maxZipBytes": 20971520,
+    "maxUnzippedBytes": 52428800,
+    "maxFileCount": 2000,
+    "workerMaxConcurrency": 1
+  }
+}
 ```
 
 ## POST /api/admin/jobs/:id/cancel

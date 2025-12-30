@@ -1,8 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { resolveRepoRoot } from './paths';
+import { MAX_ZIP_BYTES } from './limits';
 
-export const MAX_ZIP_BYTES = 20 * 1024 * 1024;
+export { MAX_ZIP_BYTES };
 
 export async function saveZipFile(file: File, submissionId: string) {
   const repoRoot = resolveRepoRoot();

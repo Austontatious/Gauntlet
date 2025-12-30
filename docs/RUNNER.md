@@ -23,10 +23,10 @@ The reporter writes JSON to `GAUNTLET_TEST_OUTPUT` for parsing.
 ### Limits
 
 - Max runtime: `MAX_JOB_RUNTIME_MS` (default 5000ms)
-- ZIP size limit: 20MB
-- Unzipped size limit: 50MB
+- ZIP size limit: `MAX_ZIP_BYTES` (default 20MB)
+- Unzipped size limit: `MAX_UNZIPPED_BYTES` (default 50MB)
 - Workspace size limit: 50MB
-- File count limit: 2000
+- File count limit: `MAX_FILE_COUNT` (default 2000)
 - Bounded concurrency: `WORKER_MAX_CONCURRENCY` (default 1)
 
 These values are configurable per challenge in `scoring.json`.

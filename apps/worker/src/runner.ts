@@ -33,16 +33,36 @@ interface RunnerOptions {
   runnerHandle: string;
 }
 
+function readEnvNumber(key: string, fallback: number) {
+  const raw = process.env[key];
+  const value = raw ? Number(raw) : NaN;
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
 const DEFAULT_CONFIG: ScoringConfig = {
   testsPath: 'tests',
-  maxZipBytes: 20 * 1024 * 1024,
-  maxUnzippedBytes: 50 * 1024 * 1024,
+  maxZipBytes: readEnvNumber('MAX_ZIP_BYTES', 20 * 1024 * 1024),
+  maxUnzippedBytes: readEnvNumber('MAX_UNZIPPED_BYTES', 50 * 1024 * 1024),
   maxWorkspaceBytes: 50 * 1024 * 1024,
-  maxFileCount: 2000,
+  maxFileCount: readEnvNumber('MAX_FILE_COUNT', 2000),
   installTimeoutMs: 4 * 60 * 1000,
   testTimeoutMs: 2 * 60 * 1000,
   totalTimeoutMs: 7 * 60 * 1000,
 };
+
+const MAX_LOG_BYTES = 64 * 1024;
+const LOG_TRUNCATION_MARKER = '\n...truncated\n';
+
+function appendLog(buffer: string, addition: string) {
+  if (!addition) return buffer;
+  const next = buffer + addition;
+  if (next.length <= MAX_LOG_BYTES) return next;
+  const available = MAX_LOG_BYTES - LOG_TRUNCATION_MARKER.length;
+  if (available <= 0) {
+    return LOG_TRUNCATION_MARKER.slice(0, MAX_LOG_BYTES);
+  }
+  return LOG_TRUNCATION_MARKER + next.slice(next.length - available);
+}
 
 class TimeoutError extends Error {
   constructor(message: string) {
@@ -365,7 +385,7 @@ export async function scoreSubmission(
       timeoutMs,
     });
 
-    logBuffer += `${result.stdout}\n${result.stderr}`;
+    logBuffer = appendLog(logBuffer, `${result.stdout}\n${result.stderr}`);
 
     if (result.timedOut || remainingMs() <= 0) {
       await killSandbox(options.runnerHandle);
@@ -400,7 +420,7 @@ export async function scoreSubmission(
       }
     }
 
-    logBuffer += `${summaryLines.join('\n')}\n`;
+    logBuffer = appendLog(logBuffer, `${summaryLines.join('\n')}\n`);
 
     const submissionResult = buildSubmissionResult(
       parsed,
