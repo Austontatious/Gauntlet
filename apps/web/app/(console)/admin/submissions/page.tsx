@@ -18,8 +18,10 @@ export default async function AdminSubmissionsPage({
       <main className="px-6 pb-16 md:px-12">
         <section className="mx-auto max-w-3xl">
           <Card>
-            <h1 className="text-xl font-semibold text-slate-900">Unauthorized</h1>
-            <p className="mt-2 text-sm text-slate-600">
+            <h1 className="text-xl font-semibold text-[color:var(--text)]">
+              Unauthorized
+            </h1>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
               Provide a valid ADMIN_TOKEN via ?token= or x-admin-token header.
             </p>
           </Card>
@@ -46,15 +48,19 @@ export default async function AdminSubmissionsPage({
         <div className="flex items-center justify-between">
           <div>
             <Badge>Admin</Badge>
-            <h1 className="mt-4 text-3xl font-semibold text-slate-950">Submissions</h1>
+            <h1 className="mt-4 text-3xl font-semibold text-[color:var(--text)]">
+              Submissions
+            </h1>
           </div>
-          <p className="text-sm text-slate-600">{submissions.length} entries</p>
+          <p className="text-sm text-[color:var(--muted)]">
+            {submissions.length} entries
+          </p>
         </div>
 
-        <Card>
-          <div className="overflow-x-auto">
+        <Card className="overflow-hidden">
+          <div className="max-h-[600px] overflow-auto">
             <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-slate-500">
+              <thead className="sticky top-0 z-10 bg-[color:var(--panel-2)] text-xs uppercase tracking-[0.2em] text-[color:var(--muted)] backdrop-blur">
                 <tr>
                   <th className="py-3">Created</th>
                   <th className="py-3">Challenge</th>
@@ -64,19 +70,28 @@ export default async function AdminSubmissionsPage({
                   <th className="py-3">Link</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[color:var(--border)]">
                 {submissions.map((submission) => (
-                  <tr key={submission.id} className="text-slate-700">
+                  <tr
+                    key={submission.id}
+                    className="text-[color:var(--text)] odd:bg-[color:var(--panel-2)] hover:bg-[color:var(--bg-2)]"
+                  >
                     <td className="py-3">
                       {submission.createdAt.toISOString().slice(0, 19).replace('T', ' ')}
                     </td>
-                    <td className="py-3">{submission.challenge.slug}</td>
+                    <td className="py-3 text-[color:var(--muted)]">
+                      {submission.challenge.slug}
+                    </td>
                     <td className="py-3">{submission.displayName}</td>
-                    <td className="py-3">{submission.status}</td>
-                    <td className="py-3">{submission.submitType}</td>
+                    <td className="py-3 text-[color:var(--muted)]">
+                      {submission.status}
+                    </td>
+                    <td className="py-3 text-[color:var(--muted)]">
+                      {submission.submitType}
+                    </td>
                     <td className="py-3">
                       <a
-                        className="text-amber-600 hover:text-amber-500"
+                        className="text-[color:var(--primary)] hover:text-[color:var(--primary-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
                         href={`/submissions/${submission.id}`}
                       >
                         view

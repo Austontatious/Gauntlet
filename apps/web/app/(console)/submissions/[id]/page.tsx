@@ -40,53 +40,57 @@ export default async function SubmissionPage({ params }: PageProps) {
       <section className="mx-auto max-w-4xl space-y-6">
         <div>
           <Badge>{submission.challenge.slug}</Badge>
-          <h1 className="mt-4 text-3xl font-semibold text-slate-950">Submission</h1>
-          <p className="mt-2 text-sm text-slate-600">{submission.displayName}</p>
+          <h1 className="mt-4 text-3xl font-semibold text-[color:var(--text)]">
+            Submission
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            {submission.displayName}
+          </p>
         </div>
 
         <Card className="space-y-4">
-          <div className="flex flex-wrap gap-6 text-sm text-slate-700">
+          <div className="flex flex-wrap gap-6 text-sm text-[color:var(--muted)]">
             <div>
-              <p className="text-xs uppercase text-slate-500">Status</p>
-              <p className="font-semibold text-slate-900">{submission.status}</p>
+              <p className="text-xs uppercase text-[color:var(--muted)]">Status</p>
+              <p className="font-semibold text-[color:var(--text)]">{submission.status}</p>
             </div>
             <div>
-              <p className="text-xs uppercase text-slate-500">Method</p>
-              <p className="font-semibold text-slate-900">{submission.methodUsed}</p>
+              <p className="text-xs uppercase text-[color:var(--muted)]">Method</p>
+              <p className="font-semibold text-[color:var(--text)]">{submission.methodUsed}</p>
             </div>
             <div>
-              <p className="text-xs uppercase text-slate-500">Self-time</p>
-              <p className="font-semibold text-slate-900">
+              <p className="text-xs uppercase text-[color:var(--muted)]">Self-time</p>
+              <p className="font-semibold text-[color:var(--text)]">
                 {submission.selfReportedMinutes ? `${submission.selfReportedMinutes}m` : '--'}
               </p>
             </div>
             <div>
-              <p className="text-xs uppercase text-slate-500">Runtime</p>
-              <p className="font-semibold text-slate-900">
+              <p className="text-xs uppercase text-[color:var(--muted)]">Runtime</p>
+              <p className="font-semibold text-[color:var(--text)]">
                 {result.runtimeMs ? `${result.runtimeMs}ms` : '--'}
               </p>
             </div>
           </div>
 
-          <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+          <div className="grid gap-4 rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel-2)] px-4 py-3 text-sm">
             <div className="flex flex-wrap gap-6">
               <div>
-                <p className="text-xs uppercase text-slate-500">Pass rate</p>
-                <p className="font-semibold text-slate-900">
+                <p className="text-xs uppercase text-[color:var(--muted)]">Pass rate</p>
+                <p className="font-semibold text-[color:var(--text)]">
                   {result.passRate !== undefined
                     ? `${Math.round(result.passRate * 100)}%`
                     : '--'}
                 </p>
               </div>
               <div>
-                <p className="text-xs uppercase text-slate-500">Tests</p>
-                <p className="font-semibold text-slate-900">
+                <p className="text-xs uppercase text-[color:var(--muted)]">Tests</p>
+                <p className="font-semibold text-[color:var(--text)]">
                   {result.testsPassed ?? 0}/{result.testsTotal ?? 0}
                 </p>
               </div>
               <div>
-                <p className="text-xs uppercase text-slate-500">Error</p>
-                <p className="font-semibold text-slate-900">
+                <p className="text-xs uppercase text-[color:var(--muted)]">Error</p>
+                <p className="font-semibold text-[color:var(--text)]">
                   {result.errorSummary || '--'}
                 </p>
               </div>
@@ -95,8 +99,8 @@ export default async function SubmissionPage({ params }: PageProps) {
         </Card>
 
         <Card>
-          <h2 className="text-lg font-semibold text-slate-900">Log excerpt</h2>
-          <pre className="mt-4 max-h-64 overflow-auto rounded-2xl bg-slate-950 p-4 text-xs text-slate-100">
+          <h2 className="text-lg font-semibold text-[color:var(--text)]">Log excerpt</h2>
+          <pre className="mt-4 max-h-64 overflow-auto rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel-2)] p-4 text-xs text-[color:var(--text)] font-mono">
             {submission.logExcerpt || 'No logs captured.'}
           </pre>
         </Card>

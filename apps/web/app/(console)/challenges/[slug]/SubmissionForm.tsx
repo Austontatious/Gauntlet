@@ -94,7 +94,7 @@ export function SubmissionForm({ challengeSlug }: { challengeSlug: string }) {
         <select
           id="methodUsed"
           name="methodUsed"
-          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900"
+          className="h-11 w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--panel-2)] px-4 text-sm text-[color:var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
           defaultValue="VIBE"
         >
           {methodOptions.map((option) => (
@@ -110,7 +110,7 @@ export function SubmissionForm({ challengeSlug }: { challengeSlug: string }) {
         <select
           id="submitType"
           name="submitType"
-          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900"
+          className="h-11 w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--panel-2)] px-4 text-sm text-[color:var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
           value={submitType}
           onChange={(event) => setSubmitType(event.target.value)}
         >
@@ -143,12 +143,12 @@ export function SubmissionForm({ challengeSlug }: { challengeSlug: string }) {
       <Button type="submit">Submit for scoring</Button>
 
       {status && (
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+        <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel-2)] px-4 py-3 text-sm text-[color:var(--muted)]">
           <p>{status}</p>
           {submissionId ? (
             <Link
               href={`/submissions/${submissionId}`}
-              className="mt-2 inline-flex text-sm font-semibold text-amber-600"
+              className="mt-2 inline-flex text-sm font-semibold text-[color:var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
             >
               View submission -&gt;
             </Link>

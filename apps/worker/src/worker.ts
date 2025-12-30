@@ -94,7 +94,6 @@ export async function startWorker({
   maxRuntimeMs,
   watchdogIntervalMs,
 }: WorkerOptions) {
-  const host = os.hostname();
   let activeCount = 0;
   let polling = false;
 

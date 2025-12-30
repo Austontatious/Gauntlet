@@ -25,17 +25,21 @@ export default async function LeaderboardPage({ params }: PageProps) {
       <section className="mx-auto max-w-6xl space-y-6">
         <div>
           <Badge>{data.challenge.slug}</Badge>
-          <h1 className="mt-4 text-3xl font-semibold text-slate-950">Leaderboard</h1>
-          <p className="mt-2 text-sm text-slate-600">{data.challenge.title}</p>
+          <h1 className="mt-4 text-3xl font-semibold text-[color:var(--text)]">
+            Leaderboard
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            {data.challenge.title}
+          </p>
         </div>
 
-        <Card>
+        <Card className="overflow-hidden">
           {leaderboard.length === 0 ? (
-            <p className="text-sm text-slate-600">No scored submissions yet.</p>
+            <p className="text-sm text-[color:var(--muted)]">No scored submissions yet.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="max-h-[560px] overflow-auto">
               <table className="w-full text-left text-sm">
-                <thead className="text-xs uppercase tracking-wide text-slate-500">
+                <thead className="sticky top-0 z-10 bg-[color:var(--panel-2)] text-xs uppercase tracking-[0.2em] text-[color:var(--muted)] backdrop-blur">
                   <tr>
                     <th className="py-3">Rank</th>
                     <th className="py-3">Name</th>
@@ -46,12 +50,17 @@ export default async function LeaderboardPage({ params }: PageProps) {
                     <th className="py-3">Repo</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[color:var(--border)]">
                   {leaderboard.map((entry, index) => (
-                    <tr key={entry.submissionId} className="text-slate-700">
-                      <td className="py-3 font-semibold text-slate-900">#{index + 1}</td>
+                    <tr
+                      key={entry.submissionId}
+                      className="text-[color:var(--text)] odd:bg-[color:var(--panel-2)] hover:bg-[color:var(--bg-2)]"
+                    >
+                      <td className="py-3 font-semibold text-[color:var(--text)]">
+                        #{index + 1}
+                      </td>
                       <td className="py-3">{entry.displayName}</td>
-                      <td className="py-3">{entry.methodUsed}</td>
+                      <td className="py-3 text-[color:var(--muted)]">{entry.methodUsed}</td>
                       <td className="py-3">
                         {(entry.passRate * 100).toFixed(0)}% ({entry.testsPassed}/
                         {entry.testsTotal})
@@ -63,7 +72,7 @@ export default async function LeaderboardPage({ params }: PageProps) {
                       <td className="py-3">
                         {entry.repoUrl ? (
                           <a
-                            className="text-amber-600 hover:text-amber-500"
+                            className="text-[color:var(--primary)] hover:text-[color:var(--primary-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
                             href={entry.repoUrl}
                           >
                             repo

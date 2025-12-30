@@ -84,15 +84,17 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
         <div className="space-y-8">
           <div>
             <Badge>{data.slug}</Badge>
-            <h1 className="mt-4 text-3xl font-semibold text-slate-950 md:text-4xl">
+            <h1 className="mt-4 text-3xl font-semibold text-[color:var(--text)] md:text-4xl">
               {data.title}
             </h1>
             {data.shortDescription ? (
-              <p className="mt-2 text-sm text-slate-600">{data.shortDescription}</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">
+                {data.shortDescription}
+              </p>
             ) : null}
           </div>
 
-          <Card className="text-sm text-slate-700">
+          <Card className="text-sm text-[color:var(--muted)]">
             <div className="markdown">
               <Markdown content={data.specMarkdown ?? ''} />
             </div>
@@ -101,8 +103,10 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
 
         <div className="space-y-6">
           <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Submit your run</h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <h2 className="text-lg font-semibold text-[color:var(--text)]">
+              Submit your run
+            </h2>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
               Submit a public GitHub repo or a ZIP. The runner will score it in the background.
             </p>
             <div className="mt-6">
@@ -111,27 +115,29 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
           </Card>
 
           <Card>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-semibold text-[color:var(--text)]">
               How scoring works (v0.1)
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
               If your solution passes these tests locally under the same runtime, it will
               pass on Gauntlet.
             </p>
-            <dl className="mt-4 space-y-2 text-sm text-slate-700">
+            <dl className="mt-4 space-y-2 text-sm text-[color:var(--muted)]">
               <div className="flex items-center justify-between">
-                <dt className="font-semibold text-slate-600">Build-time</dt>
+                <dt className="font-semibold text-[color:var(--muted)]">Build-time</dt>
                 <dd>Honor system (for now)</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="font-semibold text-slate-600">Correctness</dt>
+                <dt className="font-semibold text-[color:var(--muted)]">Correctness</dt>
                 <dd>Official tests</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="font-semibold text-slate-600">Execution</dt>
+                <dt className="font-semibold text-[color:var(--muted)]">Execution</dt>
                 <dd
                   className={`font-semibold ${
-                    executionEnabled ? 'text-emerald-600' : 'text-amber-600'
+                    executionEnabled
+                      ? 'text-[color:var(--success)]'
+                      : 'text-[color:var(--accent)]'
                   }`}
                 >
                   {executionEnabled ? 'Active' : 'Paused'}
@@ -142,9 +148,11 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
 
           <Card>
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Leaderboard preview</h2>
+              <h2 className="text-lg font-semibold text-[color:var(--text)]">
+                Leaderboard preview
+              </h2>
               <a
-                className="text-sm font-semibold text-amber-600"
+                className="text-sm font-semibold text-[color:var(--primary)] hover:text-[color:var(--primary-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
                 href={`/challenges/${slug}/leaderboard`}
               >
                 Full board -&gt;
@@ -152,22 +160,24 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
             </div>
             <div className="mt-4 space-y-3">
               {leaderboard.length === 0 ? (
-                <p className="text-sm text-slate-600">No submissions scored yet.</p>
+                <p className="text-sm text-[color:var(--muted)]">
+                  No submissions scored yet.
+                </p>
               ) : (
                 leaderboard.slice(0, 5).map((entry, index) => (
                   <div
                     key={entry.submissionId}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm"
+                    className="flex items-center justify-between rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel-2)] px-4 py-3 text-sm"
                   >
                     <div>
-                      <p className="font-semibold text-slate-900">
+                      <p className="font-semibold text-[color:var(--text)]">
                         #{index + 1} {entry.displayName}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[color:var(--muted)]">
                         {entry.testsPassed}/{entry.testsTotal} tests - {entry.runtimeMs}ms
                       </p>
                     </div>
-                    <span className="text-xs font-semibold text-slate-600">
+                    <span className="text-xs font-semibold text-[color:var(--muted)]">
                       {(entry.passRate * 100).toFixed(0)}%
                     </span>
                   </div>
