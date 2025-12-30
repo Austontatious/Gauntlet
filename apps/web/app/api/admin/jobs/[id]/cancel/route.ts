@@ -46,7 +46,6 @@ export async function POST(
       // v0.1: no dedicated CANCELED status in schema.
       // Treat admin-initiated cancellation as a terminal FAILED with a clear reason.
       status: 'FAILED',
-      cancelReason: cancelMessage,
       finishedAt: new Date(),
     },
   });
