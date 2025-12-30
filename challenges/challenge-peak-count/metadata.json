@@ -1,0 +1,8 @@
+{
+  "slug": "peak-count",
+  "title": "Peak Count",
+  "difficulty": "beginner",
+  "category": "arrays",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

@@ -4,19 +4,20 @@
 
 - Docker Postgres started on port 5433 (port 5432 already in use).
 - Prisma generate + migrate + seed completed successfully.
-- Web and worker started locally.
+- Web and runner started locally.
 - ZIP submission for challenge-001 completed with 4/4 tests passing.
+- Malicious ZIP with infinite loop timed out and was marked FAILED.
+- Submission with network access attempts failed with "Network disabled by Gauntlet".
+- ZIP path traversal was rejected with "ZIP contains invalid paths".
+- Log spam was capped at `MAX_LOG_BYTES` and marked `logsTruncated=true` (verified by lowering
+  `MAX_LOG_BYTES` to 1024 for the test).
 
 ## Render API Verification
 
-- Dry run: existing services + database discovered.
-- Deploy: services updated, deploys triggered, both web + worker reached `live`.
-- Pause: worker env updated with `WORKER_ENABLED=false`, deploys reached `live`.
-- Resume: worker env updated with `WORKER_ENABLED=true` and `RUN_UNTRUSTED_CODE=true`, deploys reached `live`.
-- Migrate job: `gauntlet-migrate` created, ran `pnpm db:deploy && pnpm seed`, then deleted; worker redeployed and reached `live`.
-
-Web URL: https://gauntlet-web.onrender.com
+- Not run in this environment. Use `pnpm render:deploy:dry` and `pnpm render:deploy`
+  once Render credentials are available.
 
 ## Notes
 
-- Verify worker behavior from Render logs after pause/resume to confirm the guard message and normal polling.
+- When running local abuse tests in quick succession, rate limits will trigger 429s unless the
+  `x-forwarded-for` header is varied.

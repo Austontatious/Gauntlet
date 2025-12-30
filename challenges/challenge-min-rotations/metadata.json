@@ -1,0 +1,8 @@
+{
+  "slug": "min-rotations",
+  "title": "Minimal Rotations",
+  "difficulty": "advanced",
+  "category": "strings",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

@@ -103,7 +103,7 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
           <Card>
             <h2 className="text-lg font-semibold text-slate-900">Submit your run</h2>
             <p className="mt-2 text-sm text-slate-600">
-              Submit a public GitHub repo or a ZIP. The worker will score it in the background.
+              Submit a public GitHub repo or a ZIP. The runner will score it in the background.
             </p>
             <div className="mt-6">
               <SubmissionForm challengeSlug={slug} />

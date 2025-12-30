@@ -1,0 +1,8 @@
+{
+  "slug": "threshold-flood",
+  "title": "Threshold Flood",
+  "difficulty": "advanced",
+  "category": "graphs",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

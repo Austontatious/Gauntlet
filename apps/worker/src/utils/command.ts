@@ -5,6 +5,7 @@ interface RunCommandOptions {
   env?: NodeJS.ProcessEnv;
   timeoutMs: number;
   maxOutputBytes?: number;
+  signal?: AbortSignal;
 }
 
 interface RunCommandResult {
@@ -15,7 +16,11 @@ interface RunCommandResult {
   timedOut: boolean;
 }
 
-const DEFAULT_MAX_OUTPUT_BYTES = 64 * 1024;
+const DEFAULT_MAX_OUTPUT_BYTES = (() => {
+  const raw = process.env.MAX_LOG_BYTES;
+  const value = raw ? Number(raw) : NaN;
+  return Number.isFinite(value) && value > 0 ? value : 64 * 1024;
+})();
 const TRUNCATION_MARKER = '\n...truncated\n';
 
 function appendOutput(current: string, chunk: string, maxBytes: number) {
@@ -34,7 +39,7 @@ export async function runCommand(
   args: string[],
   options: RunCommandOptions,
 ): Promise<RunCommandResult> {
-  const { cwd, env, timeoutMs } = options;
+  const { cwd, env, timeoutMs, signal } = options;
   const maxOutputBytes =
     typeof options.maxOutputBytes === 'number' && options.maxOutputBytes > 0
       ? options.maxOutputBytes
@@ -56,6 +61,20 @@ export async function runCommand(
       timedOut = true;
       child.kill('SIGKILL');
     }, timeoutMs);
+
+    if (signal) {
+      if (signal.aborted) {
+        child.kill('SIGKILL');
+      } else {
+        signal.addEventListener(
+          'abort',
+          () => {
+            child.kill('SIGKILL');
+          },
+          { once: true },
+        );
+      }
+    }
 
     child.stdout.on('data', (chunk) => {
       stdout = appendOutput(stdout, chunk.toString(), maxOutputBytes);

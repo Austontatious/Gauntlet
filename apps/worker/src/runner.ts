@@ -26,11 +26,12 @@ interface RunnerOutput {
   errorSummary: string | null;
   commitHash?: string | null;
   timedOut?: boolean;
+  logsTruncated?: boolean;
 }
 
 interface RunnerOptions {
   maxRuntimeMs: number;
-  runnerHandle: string;
+  signal?: AbortSignal;
 }
 
 function readEnvNumber(key: string, fallback: number) {
@@ -50,17 +51,23 @@ const DEFAULT_CONFIG: ScoringConfig = {
   totalTimeoutMs: 7 * 60 * 1000,
 };
 
-const MAX_LOG_BYTES = 64 * 1024;
+const MAX_LOG_BYTES = readEnvNumber('MAX_LOG_BYTES', 64 * 1024);
 const LOG_TRUNCATION_MARKER = '\n...truncated\n';
 
-function appendLog(buffer: string, addition: string) {
+function appendLog(
+  buffer: string,
+  addition: string,
+  state: { truncated: boolean },
+) {
   if (!addition) return buffer;
   const next = buffer + addition;
   if (next.length <= MAX_LOG_BYTES) return next;
   const available = MAX_LOG_BYTES - LOG_TRUNCATION_MARKER.length;
   if (available <= 0) {
+    state.truncated = true;
     return LOG_TRUNCATION_MARKER.slice(0, MAX_LOG_BYTES);
   }
+  state.truncated = true;
   return LOG_TRUNCATION_MARKER + next.slice(next.length - available);
 }
 
@@ -152,11 +159,13 @@ async function prepareSourceDir(
   sourceDir: string,
   config: ScoringConfig,
   timeoutMs: number,
+  signal?: AbortSignal,
 ): Promise<{ commitHash?: string | null }> {
   if (submission.submitType === 'GITHUB_REPO' && submission.repoUrl) {
     const clone = await runCommand('git', ['clone', '--depth=1', submission.repoUrl, sourceDir], {
       cwd: process.cwd(),
       timeoutMs,
+      signal,
     });
 
     if (clone.timedOut) {
@@ -170,6 +179,7 @@ async function prepareSourceDir(
     const commit = await runCommand('git', ['rev-parse', 'HEAD'], {
       cwd: sourceDir,
       timeoutMs: 10_000,
+      signal,
     });
 
     return { commitHash: commit.stdout.trim() || null };
@@ -226,76 +236,30 @@ async function readPackageJson(sourceDir: string) {
   };
 }
 
-async function buildInstallCommand(sourceDir: string): Promise<string | null> {
+async function assertNoDependencies(sourceDir: string) {
   const packageJson = await readPackageJson(sourceDir);
-  if (!packageJson) return null;
+  if (!packageJson) return;
 
   const dependencies = Object.keys(packageJson.dependencies ?? {}).length;
   const devDependencies = Object.keys(packageJson.devDependencies ?? {}).length;
   if (dependencies === 0 && devDependencies === 0) {
-    return null;
+    return;
   }
 
-  const hasPackageLock = existsSync(path.join(sourceDir, 'package-lock.json'));
-  if (hasPackageLock) {
-    return 'npm ci';
-  }
-
-  return 'npm install';
+  throw new Error('Dependencies are not supported in the v0.1 runner');
 }
 
-function toContainerPath(root: string, filePath: string, containerRoot: string) {
-  const relative = path.relative(root, filePath).split(path.sep).join('/');
-  return `${containerRoot}/${relative}`;
-}
-
-async function runSandboxCommand(options: {
-  containerName: string;
-  workDir: string;
-  command: string[];
-  env: Record<string, string>;
-  timeoutMs: number;
-}) {
-  const image = process.env.DOCKER_NODE_IMAGE || 'node:22-slim';
-  const dockerArgs = [
-    'run',
-    '--rm',
-    '--name',
-    options.containerName,
-    '--network',
-    'none',
-    '--memory',
-    '512m',
-    '--pids-limit',
-    '256',
-    '--cpus',
-    '1',
-    '--read-only',
-    '--tmpfs',
-    '/tmp:rw,noexec,nosuid,size=64m',
-    '-v',
-    `${options.workDir}:/work:rw`,
-    '-w',
-    '/work',
+function resolveNetworkBlockerPath(repoRoot: string) {
+  const candidates = [
+    path.join(repoRoot, 'apps', 'worker', 'dist', 'sandbox', 'network_blocker.cjs'),
+    path.join(repoRoot, 'apps', 'worker', 'sandbox', 'network_blocker.cjs'),
   ];
 
-  for (const [key, value] of Object.entries(options.env)) {
-    dockerArgs.push('-e', `${key}=${value}`);
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
   }
 
-  dockerArgs.push(image, ...options.command);
-
-  return runCommand('docker', dockerArgs, {
-    cwd: process.cwd(),
-    timeoutMs: options.timeoutMs,
-  });
-}
-
-async function killSandbox(containerName: string) {
-  await runCommand('docker', ['rm', '-f', containerName], {
-    cwd: process.cwd(),
-    timeoutMs: 5000,
-  });
+  throw new Error('Missing network blocker script');
 }
 
 export async function scoreSubmission(
@@ -305,8 +269,11 @@ export async function scoreSubmission(
 ): Promise<RunnerOutput> {
   const config = parseConfig(challenge.scoringConfig);
   const repoRoot = resolveRepoRoot();
-  const baseDir = process.env.RUNS_DIR
-    ? path.resolve(process.env.RUNS_DIR)
+  const runsDir = process.env.RUNS_DIR;
+  const baseDir = runsDir
+    ? path.isAbsolute(runsDir)
+      ? runsDir
+      : path.join(repoRoot, runsDir)
     : path.join(os.tmpdir(), 'gauntlet', 'jobs');
   await ensureDir(baseDir);
 
@@ -320,6 +287,7 @@ export async function scoreSubmission(
   await ensureDir(runOutputDir);
 
   let logBuffer = '';
+  const logState = { truncated: false };
   let commitHash: string | null = null;
   const startTime = Date.now();
   const hardTimeoutMs = Math.min(options.maxRuntimeMs, config.totalTimeoutMs);
@@ -329,7 +297,13 @@ export async function scoreSubmission(
   }
 
   try {
-    const prep = await prepareSourceDir(submission, submissionDir, config, hardTimeoutMs);
+    const prep = await prepareSourceDir(
+      submission,
+      submissionDir,
+      config,
+      hardTimeoutMs,
+      options.signal,
+    );
     commitHash = prep.commitHash ?? null;
 
     await assertWorkspaceSize(submissionDir, config.maxWorkspaceBytes);
@@ -352,43 +326,45 @@ export async function scoreSubmission(
 
     await assertWorkspaceSize(runDir, config.maxWorkspaceBytes);
 
+    await assertNoDependencies(submissionDir);
+
     if (remainingMs() <= 0) {
       throw new TimeoutError('Execution timed out');
     }
 
     const outputPath = path.join(runOutputDir, 'test-results.json');
-    const containerTestFiles = testFiles.map((file) =>
-      toContainerPath(testsDir, file, '/work/tests'),
-    );
+    const blockerPath = resolveNetworkBlockerPath(repoRoot);
+    const testArgs = [
+      '--require',
+      blockerPath,
+      '--test',
+      '--test-reporter',
+      reporterDest,
+      ...testFiles,
+    ];
+    const timeoutMs = Math.max(1, Math.min(config.testTimeoutMs, remainingMs()));
 
-    const installCommand = await buildInstallCommand(submissionDir);
-    const testCommand = `node --test --test-reporter=/work/gauntlet-reporter.mjs ${containerTestFiles.join(
-      ' ',
-    )}`;
-    const script = installCommand ? `${installCommand} && ${testCommand}` : testCommand;
-
-    const timeoutMs = Math.max(1, remainingMs());
-
-    const result = await runSandboxCommand({
-      containerName: options.runnerHandle,
-      workDir: runDir,
-      command: ['sh', '-c', script],
+    const result = await runCommand('node', testArgs, {
+      cwd: runDir,
       env: {
-        GAUNTLET_SUBMISSION_DIR: '/work/submission',
-        GAUNTLET_TEST_OUTPUT: '/work/run/test-results.json',
+        GAUNTLET_SUBMISSION_DIR: submissionDir,
+        GAUNTLET_TEST_OUTPUT: outputPath,
         NODE_OPTIONS: '--max-old-space-size=256',
-        HOME: '/tmp',
-        NPM_CONFIG_CACHE: '/tmp/.npm',
-        NPM_CONFIG_AUDIT: 'false',
-        NPM_CONFIG_FUND: 'false',
       },
       timeoutMs,
+      signal: options.signal,
     });
 
-    logBuffer = appendLog(logBuffer, `${result.stdout}\n${result.stderr}`);
+    if (
+      result.stdout.includes(LOG_TRUNCATION_MARKER) ||
+      result.stderr.includes(LOG_TRUNCATION_MARKER)
+    ) {
+      logState.truncated = true;
+    }
+
+    logBuffer = appendLog(logBuffer, `${result.stdout}\n${result.stderr}`, logState);
 
     if (result.timedOut || remainingMs() <= 0) {
-      await killSandbox(options.runnerHandle);
       throw new TimeoutError('Execution timed out');
     }
 
@@ -420,7 +396,7 @@ export async function scoreSubmission(
       }
     }
 
-    logBuffer = appendLog(logBuffer, `${summaryLines.join('\n')}\n`);
+    logBuffer = appendLog(logBuffer, `${summaryLines.join('\n')}\n`, logState);
 
     const submissionResult = buildSubmissionResult(
       parsed,
@@ -429,11 +405,12 @@ export async function scoreSubmission(
     );
 
     return {
-      result: submissionResult,
+      result: { ...submissionResult, logsTruncated: logState.truncated },
       logExcerpt: tailLines(logBuffer, 200),
       errorSummary,
       commitHash,
       timedOut: false,
+      logsTruncated: logState.truncated,
     };
   } catch (error) {
     const timedOut = error instanceof TimeoutError;
@@ -449,6 +426,7 @@ export async function scoreSubmission(
       errorSummary: message,
       commitHash,
       timedOut,
+      logsTruncated: logState.truncated,
     };
   } finally {
     if (!process.env.KEEP_RUN_DIR) {

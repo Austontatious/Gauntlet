@@ -15,6 +15,7 @@ export interface SubmissionResult {
   testsTotal: number;
   runtimeMs: number;
   errorSummary?: string | null;
+  logsTruncated?: boolean;
 }
 
 export interface LeaderboardEntry {

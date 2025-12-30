@@ -1,0 +1,8 @@
+{
+  "slug": "even-split",
+  "title": "Even Split",
+  "difficulty": "beginner",
+  "category": "math",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

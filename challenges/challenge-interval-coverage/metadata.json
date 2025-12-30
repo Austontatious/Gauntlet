@@ -1,0 +1,8 @@
+{
+  "slug": "interval-coverage",
+  "title": "Interval Coverage",
+  "difficulty": "intermediate",
+  "category": "algorithms",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

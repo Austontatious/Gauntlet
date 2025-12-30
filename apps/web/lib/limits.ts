@@ -3,6 +3,7 @@ const DEFAULT_MAX_UNZIPPED_BYTES = 50 * 1024 * 1024;
 const DEFAULT_MAX_FILE_COUNT = 2000;
 const DEFAULT_MAX_JOB_RUNTIME_MS = 5000;
 const DEFAULT_WORKER_MAX_CONCURRENCY = 1;
+const DEFAULT_MAX_LOG_BYTES = 64 * 1024;
 
 function readLimit(key: string, fallback: number) {
   const raw = process.env[key];
@@ -24,3 +25,4 @@ export const WORKER_MAX_CONCURRENCY = readLimit(
   'WORKER_MAX_CONCURRENCY',
   DEFAULT_WORKER_MAX_CONCURRENCY,
 );
+export const MAX_LOG_BYTES = readLimit('MAX_LOG_BYTES', DEFAULT_MAX_LOG_BYTES);

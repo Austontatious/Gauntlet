@@ -353,7 +353,10 @@ async function main() {
   const ownerIdEnv = process.env.RENDER_OWNER_ID;
   const ownerName = process.env.RENDER_OWNER_NAME;
   const webName = process.env.RENDER_WEB_SERVICE_NAME || 'gauntlet-web';
-  const workerName = process.env.RENDER_WORKER_SERVICE_NAME || 'gauntlet-worker';
+  const runnerName =
+    process.env.RENDER_RUNNER_SERVICE_NAME ||
+    process.env.RENDER_WORKER_SERVICE_NAME ||
+    'gauntlet-runner';
   const dbName = process.env.RENDER_POSTGRES_NAME || 'gauntlet-db';
 
   const repoUrl =
@@ -388,7 +391,7 @@ async function main() {
     },
   };
 
-  const workerPayload = {
+  const runnerPayload = {
     repo: repoUrl,
     branch: repoBranch,
     rootDir: '.',
@@ -413,12 +416,12 @@ async function main() {
     args.dryRun,
   );
 
-  const workerService = await ensureService(
+  const runnerService = await ensureService(
     services,
-    workerName,
+    runnerName,
     owner.id,
     'background_worker',
-    workerPayload,
+    runnerPayload,
     args.dryRun,
   );
 
@@ -433,12 +436,12 @@ async function main() {
     args.dryRun,
   );
 
-  if (args.dryRun && (!webService || !workerService || !db)) {
+  if (args.dryRun && (!webService || !runnerService || !db)) {
     console.log('DRY RUN: resources missing; creation required before deploy.');
     return;
   }
 
-  if (!webService || !workerService || !db) {
+  if (!webService || !runnerService || !db) {
     throw new Error('Missing required resources after create step.');
   }
 
@@ -467,16 +470,29 @@ async function main() {
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
     WORKER_ENABLED: workerEnabled,
     RUN_UNTRUSTED_CODE: runUntrusted,
+    MAX_ZIP_BYTES: process.env.MAX_ZIP_BYTES,
+    MAX_UNZIPPED_BYTES: process.env.MAX_UNZIPPED_BYTES,
+    MAX_FILE_COUNT: process.env.MAX_FILE_COUNT,
+    MAX_JOB_RUNTIME_MS: process.env.MAX_JOB_RUNTIME_MS,
+    WORKER_MAX_CONCURRENCY: process.env.WORKER_MAX_CONCURRENCY,
+    MAX_LOG_BYTES: process.env.MAX_LOG_BYTES,
   };
 
-  const workerEnv = {
+  const runnerEnv = {
     DATABASE_URL: databaseUrl,
     WORKER_ENABLED: workerEnabled,
     RUN_UNTRUSTED_CODE: runUntrusted,
+    WORKER_MAX_CONCURRENCY: process.env.WORKER_MAX_CONCURRENCY,
+    WORKER_POLL_INTERVAL_MS: process.env.WORKER_POLL_INTERVAL_MS,
+    MAX_JOB_RUNTIME_MS: process.env.MAX_JOB_RUNTIME_MS,
+    MAX_ZIP_BYTES: process.env.MAX_ZIP_BYTES,
+    MAX_UNZIPPED_BYTES: process.env.MAX_UNZIPPED_BYTES,
+    MAX_FILE_COUNT: process.env.MAX_FILE_COUNT,
+    MAX_LOG_BYTES: process.env.MAX_LOG_BYTES,
   };
 
   console.log(`Web service: ${webService.name} (${webService.id})`);
-  console.log(`Worker service: ${workerService.name} (${workerService.id})`);
+  console.log(`Runner service: ${runnerService.name} (${runnerService.id})`);
   console.log(`Postgres: ${db.name} (${db.id})`);
 
   if (webService.serviceDetails?.url) {
@@ -484,17 +500,17 @@ async function main() {
   }
 
   await updateServiceEnvVars(webService, webEnv, args.dryRun);
-  await updateServiceEnvVars(workerService, workerEnv, args.dryRun);
+  await updateServiceEnvVars(runnerService, runnerEnv, args.dryRun);
 
   const webDeployId = await triggerDeploy(webService, args.dryRun);
-  const workerDeployId = await triggerDeploy(workerService, args.dryRun);
+  const runnerDeployId = await triggerDeploy(runnerService, args.dryRun);
 
   if (!args.dryRun) {
     const webStatus = await waitForDeploy(webService, webDeployId);
-    const workerStatus = await waitForDeploy(workerService, workerDeployId);
+    const runnerStatus = await waitForDeploy(runnerService, runnerDeployId);
 
     console.log(`Deploy finished: ${webService.name}=${webStatus}`);
-    console.log(`Deploy finished: ${workerService.name}=${workerStatus}`);
+    console.log(`Deploy finished: ${runnerService.name}=${runnerStatus}`);
   }
 }
 

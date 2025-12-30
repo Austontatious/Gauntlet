@@ -39,18 +39,18 @@ PORT=5433 ./scripts/dev-db.sh
 - `ADMIN_TOKEN` -- token for `/admin/submissions` and admin APIs.
 - `UPLOADS_DIR` -- ZIP upload storage (default: `./data/uploads`).
 - `RUNS_DIR` -- runner workspace (default: `/tmp/gauntlet/jobs`).
-- `WORKER_POLL_INTERVAL_MS` -- polling interval for worker loop.
-- `WORKER_MAX_CONCURRENCY` -- max concurrent jobs per worker.
+- `WORKER_POLL_INTERVAL_MS` -- polling interval for runner loop.
+- `WORKER_MAX_CONCURRENCY` -- max concurrent jobs per runner.
 - `WORKER_WATCHDOG_INTERVAL_MS` -- watchdog interval for stale jobs.
 - `MAX_JOB_RUNTIME_MS` -- hard runtime cap per job.
 - `MAX_ZIP_BYTES` -- upload size cap.
 - `MAX_UNZIPPED_BYTES` -- extracted size cap.
 - `MAX_FILE_COUNT` -- max files per submission.
-- `WORKER_ENABLED` -- master kill switch for the worker.
+- `MAX_LOG_BYTES` -- max log capture size per job.
+- `WORKER_ENABLED` -- master kill switch for the runner.
 - `RUN_UNTRUSTED_CODE` -- explicit allow for execution.
 - `SUBMISSION_RATE_LIMIT_IP` -- per-IP submission cap.
 - `SUBMISSION_RATE_LIMIT_USER` -- per-display-name submission cap.
-- `DOCKER_NODE_IMAGE` -- container image for scoring.
 
 ## Database
 
@@ -60,7 +60,7 @@ PORT=5433 ./scripts/dev-db.sh
 
 ## Local Smoke Test
 
-With the web + worker running, submit the included fixture and watch status move
+With the web + runner running, submit the included fixture and watch status move
 from QUEUED to RUNNING to COMPLETE/FAILED.
 
 ```bash
@@ -93,9 +93,9 @@ curl -s http://localhost:3000/api/submissions/<id>
 ## Running the Apps
 
 - `pnpm dev:web` -- Next.js UI + API.
-- `pnpm dev:worker` -- local scorer worker.
+- `pnpm dev:worker` -- local scorer runner.
 
-The worker consumes jobs created by `/api/submissions` and updates submission results.
+The runner consumes jobs created by `/api/submissions` and updates submission results.
 
 ## Tests
 
@@ -114,11 +114,11 @@ The local runner executes untrusted code. v0.1 mitigations include timeouts, fil
 
 Scoring is gated behind two explicit env vars:
 
-- `WORKER_ENABLED` must be `"true"` for the worker to run at all.
+- `WORKER_ENABLED` must be `"true"` for the runner to run at all.
 - `RUN_UNTRUSTED_CODE` must be `"true"` to allow executing submissions.
 
-To pause scoring immediately, set either variable to `"false"` and redeploy the worker.
-Keep secrets out of the worker environment whenever untrusted execution is enabled.
+To pause scoring immediately, set either variable to `"false"` and redeploy the runner.
+Keep secrets out of the runner environment whenever untrusted execution is enabled.
 
 ## Docs
 

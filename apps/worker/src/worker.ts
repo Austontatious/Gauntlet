@@ -2,7 +2,6 @@ import os from 'node:os';
 import { Prisma } from '@prisma/client';
 import { prisma } from './db.js';
 import { scoreSubmission } from './runner.js';
-import { runCommand } from './utils/command.js';
 
 interface WorkerOptions {
   intervalMs: number;
@@ -12,38 +11,7 @@ interface WorkerOptions {
 }
 
 const CANCEL_GRACE_MS = 1000;
-
-let dockerAvailableCache: boolean | null = null;
-
-async function checkDockerAvailable() {
-  if (dockerAvailableCache !== null) {
-    return dockerAvailableCache;
-  }
-
-  const result = await runCommand(
-    'docker',
-    ['version', '--format', '{{.Server.Version}}'],
-    {
-      cwd: process.cwd(),
-      timeoutMs: 5000,
-    },
-  );
-
-  dockerAvailableCache = result.code === 0;
-  if (!dockerAvailableCache) {
-    console.error('Docker unavailable; refusing to run untrusted code.');
-  }
-
-  return dockerAvailableCache;
-}
-
-async function killRunnerHandle(handle: string | null) {
-  if (!handle) return;
-  await runCommand('docker', ['rm', '-f', handle], {
-    cwd: process.cwd(),
-    timeoutMs: 5000,
-  });
-}
+const activeControllers = new Map<string, AbortController>();
 
 async function markJobFailed(
   jobId: string,
@@ -83,7 +51,11 @@ async function cancelJob(
   status: 'CANCELED' | 'TIMEOUT',
   reason: string,
 ) {
-  await killRunnerHandle(job.runnerHandle);
+  const controller = activeControllers.get(job.id);
+  if (controller) {
+    controller.abort();
+    activeControllers.delete(job.id);
+  }
 
   await prisma.job.update({
     where: { id: job.id },
@@ -140,7 +112,7 @@ export async function startWorker({
         }
 
         const startedAt = new Date();
-        const timeoutAt = new Date(startedAt.getTime() + maxRuntimeMs);
+        const timeoutAt = new Date(startedAt.getTime() + maxRuntimeMs + CANCEL_GRACE_MS);
 
         const locked = await prisma.job.updateMany({
           where: { id: job.id, status: 'QUEUED' },
@@ -151,6 +123,7 @@ export async function startWorker({
             attempts: { increment: 1 },
             startedAt,
             timeoutAt,
+            runnerHandle: `${host}:${process.pid}`,
           },
         });
 
@@ -236,12 +209,6 @@ async function handleJob(jobId: string, maxRuntimeMs: number) {
     data: { status: 'RUNNING' },
   });
 
-  const dockerAvailable = await checkDockerAvailable();
-  if (!dockerAvailable) {
-    await markJobFailed(jobId, submissionId, 'sandbox_unavailable');
-    return;
-  }
-
   const jobTimeoutMs = Math.min(
     maxRuntimeMs,
     Number((challenge.scoringConfig as { totalTimeoutMs?: number })?.totalTimeoutMs ??
@@ -253,16 +220,18 @@ async function handleJob(jobId: string, maxRuntimeMs: number) {
     data: { timeoutAt: new Date(Date.now() + jobTimeoutMs) },
   });
 
-  const runnerHandle = `gauntlet-${jobId.slice(0, 8)}-${Date.now()}`;
-  await prisma.job.update({
-    where: { id: jobId },
-    data: { runnerHandle },
-  });
+  const controller = new AbortController();
+  activeControllers.set(jobId, controller);
 
-  const scored = await scoreSubmission(submission, challenge, {
-    maxRuntimeMs: jobTimeoutMs,
-    runnerHandle,
-  });
+  let scored: Awaited<ReturnType<typeof scoreSubmission>>;
+  try {
+    scored = await scoreSubmission(submission, challenge, {
+      maxRuntimeMs: jobTimeoutMs,
+      signal: controller.signal,
+    });
+  } finally {
+    activeControllers.delete(jobId);
+  }
 
   const latestJob = await prisma.job.findUnique({ where: { id: jobId } });
   if (!latestJob || latestJob.status !== 'RUNNING') {
@@ -283,6 +252,7 @@ async function handleJob(jobId: string, maxRuntimeMs: number) {
               testsTotal: 0,
               runtimeMs: 0,
               errorSummary: scored.errorSummary,
+              logsTruncated: scored.logsTruncated ?? false,
             } as Prisma.InputJsonValue)
           : Prisma.DbNull,
         commitHash: scored.commitHash,

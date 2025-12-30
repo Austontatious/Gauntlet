@@ -19,7 +19,7 @@ Service types are aligned with Render's service types (web services, background 
 
 Resources:
 - gauntlet-web: Web service (Next.js UI/API)
-- gauntlet-worker: Background worker (scorer)
+- gauntlet-runner: Background worker (scorer)
 - gauntlet-db: Postgres database
 - Optional: env group(s) for shared secrets (DATABASE_URL, shared app secrets)
 
@@ -47,11 +47,11 @@ All endpoints are relative to https://api.render.com/v1. https://render.com/docs
 | List Postgres | GET /postgres | none | postgres.id, name, ownerId | Discover DB by name | https://api-docs.render.com/reference/list-postgres |
 | Create Postgres | POST /postgres | name, plan, ownerId, version | postgres.id | Required fields documented in API reference | https://api-docs.render.com/reference/create-postgres |
 | Retrieve Postgres | GET /postgres/{postgresId} | none | postgres metadata | Inspect DB status and settings | https://api-docs.render.com/reference/retrieve-postgres |
-| Get Postgres connection info | GET /postgres/{postgresId}/connection-info | none | connection string(s) for DATABASE_URL | Use to wire web + worker | https://api-docs.render.com/reference/retrieve-postgres-connection-info |
+| Get Postgres connection info | GET /postgres/{postgresId}/connection-info | none | connection string(s) for DATABASE_URL | Use to wire web + runner | https://api-docs.render.com/reference/retrieve-postgres-connection-info |
 | List env vars | GET /services/{serviceId}/env-vars | none | current env var list | Input to safe update merge | https://api-docs.render.com/reference/get-env-vars-for-service |
 | Replace env vars | PUT /services/{serviceId}/env-vars | full env var list | updated env var list | Replaces all env vars; missing keys are removed | https://api-docs.render.com/reference/update-env-vars-for-service |
 | List env groups | GET /env-groups | none | envGroup.id, name | Service discovery for shared env groups | https://api-docs.render.com/reference/list-env-groups |
-| Create env group | POST /env-groups | name, ownerId, envVars | envGroup.id | Use for shared vars across web + worker | https://api-docs.render.com/reference/create-env-group |
+| Create env group | POST /env-groups | name, ownerId, envVars | envGroup.id | Use for shared vars across web + runner | https://api-docs.render.com/reference/create-env-group |
 | Update env group | PATCH /env-groups/{envGroupId} | name (required) | envGroup | Update metadata; env var update details in API ref | https://api-docs.render.com/reference/update-env-group |
 | Link env group to service | POST /env-groups/{envGroupId}/services/{serviceId} | none | link confirmation | Share env vars with service | https://api-docs.render.com/reference/link-service-to-env-group |
 | Unlink env group from service | DELETE /env-groups/{envGroupId}/services/{serviceId} | none | link removal | Remove shared env vars | https://api-docs.render.com/reference/unlink-service-from-env-group |
@@ -75,7 +75,7 @@ Web service:
 - Build: `pnpm install --frozen-lockfile && pnpm build:web`
 - Start: `pnpm start:web`
 
-Worker service:
+Runner service:
 - Build: `pnpm install --frozen-lockfile && pnpm build:worker`
 - Start: `pnpm start:worker` (runs `node dist/index.js`)
 
@@ -83,8 +83,8 @@ Inline snippet (for Render UI fields):
 ```
 Web Build Command: pnpm install --frozen-lockfile && pnpm build:web
 Web Start Command: pnpm start:web
-Worker Build Command: pnpm install --frozen-lockfile && pnpm build:worker
-Worker Start Command: pnpm start:worker
+Runner Build Command: pnpm install --frozen-lockfile && pnpm build:worker
+Runner Start Command: pnpm start:worker
 ```
 
 ## Idempotent Deployment Workflow (CI-safe)
@@ -94,8 +94,8 @@ Worker Start Command: pnpm start:worker
 3. Blueprint-first (hybrid): ensure render.yaml exists in repo and that a Blueprint is connected to the repo; use List blueprints to discover it and verify sync status. https://render.com/docs/infrastructure-as-code https://api-docs.render.com/reference/list-blueprints https://api-docs.render.com/reference/list-blueprint-syncs
 4. If no Blueprint exists, fall back to API-first creation for services and Postgres using owner_id; this should be treated as a one-time bootstrap path. https://api-docs.render.com/reference/create-service https://api-docs.render.com/reference/create-postgres
 5. Service discovery: list services and Postgres and map names to IDs; create any missing resources. https://api-docs.render.com/reference/list-services https://api-docs.render.com/reference/list-postgres
-6. Fetch Postgres connection info and compute DATABASE_URL to apply to web + worker env vars. https://api-docs.render.com/reference/retrieve-postgres-connection-info
-7. Update env vars using the safe replace-all algorithm (see below), then trigger deploys for web + worker. https://api-docs.render.com/reference/get-env-vars-for-service https://api-docs.render.com/reference/update-env-vars-for-service https://api-docs.render.com/reference/create-deploy
+6. Fetch Postgres connection info and compute DATABASE_URL to apply to web + runner env vars. https://api-docs.render.com/reference/retrieve-postgres-connection-info
+7. Update env vars using the safe replace-all algorithm (see below), then trigger deploys for web + runner. https://api-docs.render.com/reference/get-env-vars-for-service https://api-docs.render.com/reference/update-env-vars-for-service https://api-docs.render.com/reference/create-deploy
 8. Poll deploy status until both services report success; if deploy fails, consider rollback. https://api-docs.render.com/reference/retrieve-deploy https://api-docs.render.com/reference/rollback-deploy
 
 ## Environment Variable Strategy
@@ -142,22 +142,22 @@ v0.2 hardened approach:
 - Deploy triggers: use git push auto deploy or explicitly call the Deploy API for deterministic automation. https://api-docs.render.com/reference/create-deploy
 - Env var changes require an explicit deploy call regardless of autoDeploy settings. https://api-docs.render.com/reference/update-env-vars-for-service
 - Rollback posture: use the Rollback deploy endpoint and document rollback criteria. https://api-docs.render.com/reference/rollback-deploy
-- Worker scaling: adjust worker service settings as needed using service update API (confirm fields in API reference). https://api-docs.render.com/reference/update-service
+- Runner scaling: adjust runner service settings as needed using service update API (confirm fields in API reference). https://api-docs.render.com/reference/update-service
 - Logging and observability: use Render logs and events in the dashboard; add app-level logs for job runs and scoring outcomes.
 
 ## Security Plan
 
 - Treat the Render API key as a root secret; store in CI secret manager and rotate regularly. https://render.com/docs/api
 - Use a dedicated workspace or team for Gauntlet to limit blast radius. https://api-docs.render.com/reference/list-owners
-- Reduce worker privileges where possible and document risk of untrusted code execution; keep worker isolated from admin tokens and nonessential secrets.
+- Reduce runner privileges where possible and document risk of untrusted code execution; keep runner isolated from admin tokens and nonessential secrets.
 
 ## Implementation Backlog
 
 | Priority | Ticket | Goal | Acceptance criteria | Rough effort |
 | --- | --- | --- | --- | --- |
-| P0 | Blueprint base infra | render.yaml defines web, worker, and Postgres as source of truth | Blueprint connects to repo; render.yaml changes sync and services exist | 1-2 days |
+| P0 | Blueprint base infra | render.yaml defines web, runner, and Postgres as source of truth | Blueprint connects to repo; render.yaml changes sync and services exist | 1-2 days |
 | P0 | Render API automation scripts | Repeatable discovery, env var updates, and deploy triggers | Can run idempotent workflow end-to-end without manual edits | 1-2 days |
-| P0 | CI wiring | CI job triggers Render API workflow on main | Deploys web + worker, logs success/failure | 1 day |
+| P0 | CI wiring | CI job triggers Render API workflow on main | Deploys web + runner, logs success/failure | 1 day |
 | P1 | One-off migration/seed automation | Safe Prisma migrate and seed orchestration | Migration and seed run once per env without drift | 1-2 days |
 | P2 | Secret rotation tooling | Scripted rotation and validation for Render API key | Rotation playbook and verification checks | 1 day |
 

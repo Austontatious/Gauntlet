@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getPublicChallenges } from '@/lib/challenges';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,12 +17,12 @@ export default async function ChallengesPage() {
             <p className="mt-2 text-sm text-slate-600">
               Pick a spec, ship a solution, and climb the board.
             </p>
-            <a
+            <Link
               href="/challenges/format"
               className="mt-3 inline-flex text-sm font-semibold text-amber-600 hover:text-amber-500"
             >
               Challenge format spec -&gt;
-            </a>
+            </Link>
           </div>
           <Badge>{challenges.length} live</Badge>
         </div>

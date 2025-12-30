@@ -2,7 +2,7 @@
 
 Gauntlet v0.1 executes untrusted code. Scoring is **disabled by default** and must be
 explicitly enabled with `WORKER_ENABLED=true` and `RUN_UNTRUSTED_CODE=true`.
-This is a baseline sandbox, not a hardened production isolation boundary.
+This is a process-level guardrail, not a hardened production isolation boundary.
 
 ## Threat Model
 
@@ -13,8 +13,8 @@ This is a baseline sandbox, not a hardened production isolation boundary.
 
 ## v0.1 Mitigations
 
-- Kill switch: worker exits unless `WORKER_ENABLED` and `RUN_UNTRUSTED_CODE` are true.
-- Per-job Docker sandbox with `--network none`, read-only root FS, memory/pids/cpu limits.
+- Kill switch: runner exits unless `WORKER_ENABLED` and `RUN_UNTRUSTED_CODE` are true.
+- Process-level network blocking via a preload hook.
 - Temp workspace per job under `RUNS_DIR`, deleted after scoring.
 - ZIP size + unzipped size + file count limits.
 - Hard runtime timeout plus watchdog cancellation for stale jobs.
@@ -24,10 +24,15 @@ This is a baseline sandbox, not a hardened production isolation boundary.
 
 ## Known Gaps
 
-- Docker is not a full sandbox (no custom seccomp/gVisor/Firecracker).
+- No VM-grade sandboxing (no gVisor/Firecracker).
 - Git clone happens on the host and requires outbound network access.
 - In-memory rate limiting resets on deploy and does not share state across instances.
-- Dependency installs still execute arbitrary scripts (inside the container).
+- Dependency installs are not supported in the v0.1 runner.
+
+## Risk Accepted (v0.1)
+
+Gauntlet v0.1 relies on process-level guardrails and a private runner service
+boundary. This is not equivalent to VM-grade isolation. Proceed accordingly.
 
 ## v0.2 Hardening Plan
 

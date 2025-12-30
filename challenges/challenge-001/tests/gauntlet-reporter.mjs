@@ -20,6 +20,14 @@ export default async function* gauntletReporter(source) {
         message: data?.details?.error?.message || data?.error?.message,
       });
     }
+
+    if (type === 'test:stdout' && data?.message) {
+      process.stdout.write(data.message);
+    }
+
+    if (type === 'test:stderr' && data?.message) {
+      process.stderr.write(data.message);
+    }
   }
 
   const outputPath = process.env.GAUNTLET_TEST_OUTPUT || 'gauntlet-test-results.json';

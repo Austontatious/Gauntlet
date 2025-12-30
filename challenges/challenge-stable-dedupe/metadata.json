@@ -1,0 +1,8 @@
+{
+  "slug": "stable-dedupe",
+  "title": "Stable Dedupe",
+  "difficulty": "intermediate",
+  "category": "data-structures",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

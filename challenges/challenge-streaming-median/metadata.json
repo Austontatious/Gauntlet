@@ -1,0 +1,8 @@
+{
+  "slug": "streaming-median",
+  "title": "Streaming Median With Deletions",
+  "difficulty": "expert",
+  "category": "data-structures",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

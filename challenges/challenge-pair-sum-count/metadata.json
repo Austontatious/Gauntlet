@@ -1,0 +1,8 @@
+{
+  "slug": "pair-sum-count",
+  "title": "Pair Sum Count",
+  "difficulty": "intermediate",
+  "category": "algorithms",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

@@ -100,7 +100,8 @@ Response:
     "testsPassed": 4,
     "testsTotal": 4,
     "runtimeMs": 1200,
-    "errorSummary": null
+    "errorSummary": null,
+    "logsTruncated": false
   },
   "logExcerpt": "...",
   "createdAt": "2024-01-01T12:00:00.000Z"
@@ -115,12 +116,14 @@ Response:
 ```json
 {
   "executionEnabled": false,
+  "dbReachable": true,
   "limits": {
     "maxJobRuntimeMs": 5000,
     "maxZipBytes": 20971520,
     "maxUnzippedBytes": 52428800,
     "maxFileCount": 2000,
-    "workerMaxConcurrency": 1
+    "workerMaxConcurrency": 1,
+    "maxLogBytes": 65536
   }
 }
 ```

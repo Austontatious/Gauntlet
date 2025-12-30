@@ -37,7 +37,7 @@ export default function Home() {
           <Card>
             <h3 className="text-lg font-semibold text-slate-900">Submit & score</h3>
             <p className="mt-2 text-sm text-slate-600">
-              Drop a GitHub repo or ZIP. The worker runs official tests and records runtime,
+              Drop a GitHub repo or ZIP. The runner runs official tests and records runtime,
               pass rate, and logs.
             </p>
           </Card>
