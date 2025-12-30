@@ -14,8 +14,13 @@ if (!runUntrusted) {
 }
 
 const intervalMs = Number(process.env.WORKER_POLL_INTERVAL_MS ?? 3000);
+const maxConcurrency = Number(process.env.WORKER_MAX_CONCURRENCY ?? 1);
+const maxRuntimeMs = Number(process.env.MAX_JOB_RUNTIME_MS ?? 5000);
+const watchdogIntervalMs = Number(process.env.WORKER_WATCHDOG_INTERVAL_MS ?? 2000);
 
-startWorker({ intervalMs }).catch((error: unknown) => {
-  console.error('Worker failed to start', error);
-  process.exit(1);
-});
+startWorker({ intervalMs, maxConcurrency, maxRuntimeMs, watchdogIntervalMs }).catch(
+  (error: unknown) => {
+    console.error('Worker failed to start', error);
+    process.exit(1);
+  },
+);

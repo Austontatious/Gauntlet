@@ -2,7 +2,8 @@
 
 ## Local Runner (v0.1)
 
-The worker scores submissions locally with a minimal safety envelope.
+The worker scores submissions locally inside a Docker sandbox. Docker is
+required; if unavailable, the worker refuses to execute untrusted code.
 
 ### Contract
 
@@ -21,12 +22,27 @@ The reporter writes JSON to `GAUNTLET_TEST_OUTPUT` for parsing.
 
 ### Limits
 
-- Install timeout: 4 minutes
-- Test timeout: 2 minutes
+- Max runtime: `MAX_JOB_RUNTIME_MS` (default 5000ms)
 - ZIP size limit: 20MB
+- Unzipped size limit: 50MB
+- Workspace size limit: 50MB
 - File count limit: 2000
+- Bounded concurrency: `WORKER_MAX_CONCURRENCY` (default 1)
 
 These values are configurable per challenge in `scoring.json`.
+
+### Sandbox Details
+
+- Docker image: `node:22-slim` (override with `DOCKER_NODE_IMAGE`)
+- No outbound network (`--network none`)
+- Read-only root filesystem + `/tmp` tmpfs
+- Per-job workspace mounted at `/work`
+- Env provided to tests:
+  - `GAUNTLET_SUBMISSION_DIR=/work/submission`
+  - `GAUNTLET_TEST_OUTPUT=/work/run/test-results.json`
+
+If a submission needs dependencies, `npm install` is run inside the container.
+With network disabled, submissions should avoid external downloads.
 
 ## v0.2: GitHub Actions Runner
 

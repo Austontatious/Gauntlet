@@ -1,7 +1,7 @@
+import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { existsSync, statSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import AdmZip from 'adm-zip';
 import type { Challenge, Submission } from '@prisma/client';
 import { buildSubmissionResult, parseTestOutput } from '@gauntlet/core';
@@ -12,6 +12,8 @@ import { resolveRepoRoot } from './utils/paths.js';
 interface ScoringConfig {
   testsPath: string;
   maxZipBytes: number;
+  maxUnzippedBytes: number;
+  maxWorkspaceBytes: number;
   maxFileCount: number;
   installTimeoutMs: number;
   testTimeoutMs: number;
@@ -23,20 +25,34 @@ interface RunnerOutput {
   logExcerpt: string | null;
   errorSummary: string | null;
   commitHash?: string | null;
+  timedOut?: boolean;
+}
+
+interface RunnerOptions {
+  maxRuntimeMs: number;
+  runnerHandle: string;
 }
 
 const DEFAULT_CONFIG: ScoringConfig = {
   testsPath: 'tests',
   maxZipBytes: 20 * 1024 * 1024,
+  maxUnzippedBytes: 50 * 1024 * 1024,
+  maxWorkspaceBytes: 50 * 1024 * 1024,
   maxFileCount: 2000,
   installTimeoutMs: 4 * 60 * 1000,
   testTimeoutMs: 2 * 60 * 1000,
   totalTimeoutMs: 7 * 60 * 1000,
 };
 
-function commandExists(command: string) {
-  const result = spawnSync('which', [command]);
-  return result.status === 0;
+class TimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TimeoutError';
+  }
+}
+
+function normalizeNumber(value: unknown, fallback: number) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
 function parseConfig(config: unknown): ScoringConfig {
@@ -47,11 +63,25 @@ function parseConfig(config: unknown): ScoringConfig {
   const partial = config as Partial<ScoringConfig>;
   return {
     testsPath: partial.testsPath ?? DEFAULT_CONFIG.testsPath,
-    maxZipBytes: partial.maxZipBytes ?? DEFAULT_CONFIG.maxZipBytes,
-    maxFileCount: partial.maxFileCount ?? DEFAULT_CONFIG.maxFileCount,
-    installTimeoutMs: partial.installTimeoutMs ?? DEFAULT_CONFIG.installTimeoutMs,
-    testTimeoutMs: partial.testTimeoutMs ?? DEFAULT_CONFIG.testTimeoutMs,
-    totalTimeoutMs: partial.totalTimeoutMs ?? DEFAULT_CONFIG.totalTimeoutMs,
+    maxZipBytes: normalizeNumber(partial.maxZipBytes, DEFAULT_CONFIG.maxZipBytes),
+    maxUnzippedBytes: normalizeNumber(
+      partial.maxUnzippedBytes,
+      DEFAULT_CONFIG.maxUnzippedBytes,
+    ),
+    maxWorkspaceBytes: normalizeNumber(
+      partial.maxWorkspaceBytes,
+      DEFAULT_CONFIG.maxWorkspaceBytes,
+    ),
+    maxFileCount: normalizeNumber(partial.maxFileCount, DEFAULT_CONFIG.maxFileCount),
+    installTimeoutMs: normalizeNumber(
+      partial.installTimeoutMs,
+      DEFAULT_CONFIG.installTimeoutMs,
+    ),
+    testTimeoutMs: normalizeNumber(partial.testTimeoutMs, DEFAULT_CONFIG.testTimeoutMs),
+    totalTimeoutMs: normalizeNumber(
+      partial.totalTimeoutMs,
+      DEFAULT_CONFIG.totalTimeoutMs,
+    ),
   };
 }
 
@@ -71,16 +101,47 @@ async function collectTestFiles(dir: string): Promise<string[]> {
   return files;
 }
 
+async function measureDirectorySize(dir: string, maxBytes: number): Promise<number> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  let total = 0;
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      total += await measureDirectorySize(fullPath, maxBytes - total);
+    } else if (entry.isFile()) {
+      const stats = await fs.stat(fullPath);
+      total += stats.size;
+    }
+
+    if (total > maxBytes) {
+      throw new Error(`Workspace exceeds size limit (${maxBytes} bytes)`);
+    }
+  }
+
+  return total;
+}
+
+async function assertWorkspaceSize(dir: string, maxBytes: number) {
+  await measureDirectorySize(dir, maxBytes);
+}
+
 async function prepareSourceDir(
   submission: Submission,
   sourceDir: string,
   config: ScoringConfig,
+  timeoutMs: number,
 ): Promise<{ commitHash?: string | null }> {
   if (submission.submitType === 'GITHUB_REPO' && submission.repoUrl) {
     const clone = await runCommand('git', ['clone', '--depth=1', submission.repoUrl, sourceDir], {
       cwd: process.cwd(),
-      timeoutMs: config.totalTimeoutMs,
+      timeoutMs,
     });
+
+    if (clone.timedOut) {
+      throw new TimeoutError('Execution timed out');
+    }
 
     if (clone.code !== 0) {
       throw new Error(`git clone failed: ${clone.stderr || clone.stdout}`);
@@ -99,7 +160,7 @@ async function prepareSourceDir(
     const zipPath = path.isAbsolute(submission.zipPath)
       ? submission.zipPath
       : path.resolve(repoRoot, submission.zipPath);
-    const zipStats = statSync(zipPath);
+    const zipStats = await fs.stat(zipPath);
     if (zipStats.size > config.maxZipBytes) {
       throw new Error(`ZIP exceeds max size (${config.maxZipBytes} bytes)`);
     }
@@ -111,10 +172,19 @@ async function prepareSourceDir(
       throw new Error(`ZIP contains too many files (${entries.length})`);
     }
 
+    let totalUnzipped = 0;
     for (const entry of entries) {
       const normalized = path.normalize(entry.entryName);
       if (normalized.startsWith('..') || path.isAbsolute(normalized)) {
         throw new Error('ZIP contains invalid paths');
+      }
+
+      if (!entry.isDirectory) {
+        const entrySize = typeof entry.header?.size === 'number' ? entry.header.size : 0;
+        totalUnzipped += entrySize;
+        if (totalUnzipped > config.maxUnzippedBytes) {
+          throw new Error(`ZIP expands beyond limit (${config.maxUnzippedBytes} bytes)`);
+        }
       }
     }
 
@@ -125,99 +195,182 @@ async function prepareSourceDir(
   throw new Error('Unsupported submission type');
 }
 
-function selectInstallCommand(sourceDir: string) {
-  const hasPnpmLock = existsSync(path.join(sourceDir, 'pnpm-lock.yaml'));
+async function readPackageJson(sourceDir: string) {
+  const packageJsonPath = path.join(sourceDir, 'package.json');
+  if (!existsSync(packageJsonPath)) return null;
+
+  const raw = await fs.readFile(packageJsonPath, 'utf8');
+  return JSON.parse(raw) as {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+}
+
+async function buildInstallCommand(sourceDir: string): Promise<string | null> {
+  const packageJson = await readPackageJson(sourceDir);
+  if (!packageJson) return null;
+
+  const dependencies = Object.keys(packageJson.dependencies ?? {}).length;
+  const devDependencies = Object.keys(packageJson.devDependencies ?? {}).length;
+  if (dependencies === 0 && devDependencies === 0) {
+    return null;
+  }
+
   const hasPackageLock = existsSync(path.join(sourceDir, 'package-lock.json'));
-  const hasPnpm = commandExists('pnpm');
-
-  if (hasPnpmLock && hasPnpm) {
-    return { command: 'pnpm', args: ['install', '--frozen-lockfile'] };
-  }
-
   if (hasPackageLock) {
-    return { command: 'npm', args: ['ci'] };
+    return 'npm ci';
   }
 
-  return { command: 'npm', args: ['install'] };
+  return 'npm install';
+}
+
+function toContainerPath(root: string, filePath: string, containerRoot: string) {
+  const relative = path.relative(root, filePath).split(path.sep).join('/');
+  return `${containerRoot}/${relative}`;
+}
+
+async function runSandboxCommand(options: {
+  containerName: string;
+  workDir: string;
+  command: string[];
+  env: Record<string, string>;
+  timeoutMs: number;
+}) {
+  const image = process.env.DOCKER_NODE_IMAGE || 'node:22-slim';
+  const dockerArgs = [
+    'run',
+    '--rm',
+    '--name',
+    options.containerName,
+    '--network',
+    'none',
+    '--memory',
+    '512m',
+    '--pids-limit',
+    '256',
+    '--cpus',
+    '1',
+    '--read-only',
+    '--tmpfs',
+    '/tmp:rw,noexec,nosuid,size=64m',
+    '-v',
+    `${options.workDir}:/work:rw`,
+    '-w',
+    '/work',
+  ];
+
+  for (const [key, value] of Object.entries(options.env)) {
+    dockerArgs.push('-e', `${key}=${value}`);
+  }
+
+  dockerArgs.push(image, ...options.command);
+
+  return runCommand('docker', dockerArgs, {
+    cwd: process.cwd(),
+    timeoutMs: options.timeoutMs,
+  });
+}
+
+async function killSandbox(containerName: string) {
+  await runCommand('docker', ['rm', '-f', containerName], {
+    cwd: process.cwd(),
+    timeoutMs: 5000,
+  });
 }
 
 export async function scoreSubmission(
   submission: Submission,
   challenge: Challenge,
+  options: RunnerOptions,
 ): Promise<RunnerOutput> {
   const config = parseConfig(challenge.scoringConfig);
   const repoRoot = resolveRepoRoot();
-  const runsDir = process.env.RUNS_DIR
-    ? path.resolve(repoRoot, process.env.RUNS_DIR)
-    : path.resolve(repoRoot, 'data/runs');
-  await ensureDir(runsDir);
+  const baseDir = process.env.RUNS_DIR
+    ? path.resolve(process.env.RUNS_DIR)
+    : path.join(os.tmpdir(), 'gauntlet', 'jobs');
+  await ensureDir(baseDir);
 
-  const runDir = path.join(runsDir, `${submission.id}-${Date.now()}`);
-  const sourceDir = path.join(runDir, 'source');
-  const gauntletDir = path.join(runDir, 'gauntlet');
-  const testsDest = path.join(gauntletDir, 'tests');
+  const runDir = await fs.mkdtemp(path.join(baseDir, `${submission.id}-`));
+  const submissionDir = path.join(runDir, 'submission');
+  const testsDir = path.join(runDir, 'tests');
+  const runOutputDir = path.join(runDir, 'run');
 
-  await ensureDir(sourceDir);
-  await ensureDir(gauntletDir);
+  await ensureDir(submissionDir);
+  await ensureDir(testsDir);
+  await ensureDir(runOutputDir);
 
   let logBuffer = '';
   let commitHash: string | null = null;
+  const startTime = Date.now();
+  const hardTimeoutMs = Math.min(options.maxRuntimeMs, config.totalTimeoutMs);
+
+  function remainingMs() {
+    return Math.max(hardTimeoutMs - (Date.now() - startTime), 0);
+  }
 
   try {
-    const prep = await prepareSourceDir(submission, sourceDir, config);
+    const prep = await prepareSourceDir(submission, submissionDir, config, hardTimeoutMs);
     commitHash = prep.commitHash ?? null;
 
-    const packageJsonPath = path.join(sourceDir, 'package.json');
-    if (existsSync(packageJsonPath)) {
-      const installCommand = selectInstallCommand(sourceDir);
-      const install = await runCommand(installCommand.command, installCommand.args, {
-        cwd: sourceDir,
-        timeoutMs: config.installTimeoutMs,
-      });
-
-      logBuffer += install.stdout + '\n' + install.stderr;
-
-      if (install.code !== 0 || install.timedOut) {
-        throw new Error(
-          `Dependency install failed (${installCommand.command})${
-            install.timedOut ? ' (timeout)' : ''
-          }`,
-        );
-      }
-    }
+    await assertWorkspaceSize(submissionDir, config.maxWorkspaceBytes);
 
     const challengeDir = path.dirname(path.resolve(repoRoot, challenge.specMarkdownPath));
     const testSourceDir = path.join(challengeDir, config.testsPath);
-    await copyDir(testSourceDir, testsDest);
+    await copyDir(testSourceDir, testsDir);
 
-    const testFiles = await collectTestFiles(testsDest);
+    const testFiles = await collectTestFiles(testsDir);
     if (testFiles.length === 0) {
       throw new Error('No test files found');
     }
 
     const reporterSource = path.join(testSourceDir, 'gauntlet-reporter.mjs');
-    const reporterDest = path.join(gauntletDir, 'gauntlet-reporter.mjs');
+    const reporterDest = path.join(runDir, 'gauntlet-reporter.mjs');
     if (!existsSync(reporterSource)) {
       throw new Error('Missing gauntlet-reporter.mjs in challenge tests');
     }
     await fs.copyFile(reporterSource, reporterDest);
 
-    const outputPath = path.join(gauntletDir, 'test-results.json');
+    await assertWorkspaceSize(runDir, config.maxWorkspaceBytes);
 
-    const testCommand = await runCommand(
-      'node',
-      ['--test', `--test-reporter=${reporterDest}`, ...testFiles],
-      {
-        cwd: sourceDir,
-        timeoutMs: config.testTimeoutMs,
-        env: {
-          GAUNTLET_SUBMISSION_DIR: sourceDir,
-          GAUNTLET_TEST_OUTPUT: outputPath,
-        },
-      },
+    if (remainingMs() <= 0) {
+      throw new TimeoutError('Execution timed out');
+    }
+
+    const outputPath = path.join(runOutputDir, 'test-results.json');
+    const containerTestFiles = testFiles.map((file) =>
+      toContainerPath(testsDir, file, '/work/tests'),
     );
 
-    logBuffer += testCommand.stdout + '\n' + testCommand.stderr;
+    const installCommand = await buildInstallCommand(submissionDir);
+    const testCommand = `node --test --test-reporter=/work/gauntlet-reporter.mjs ${containerTestFiles.join(
+      ' ',
+    )}`;
+    const script = installCommand ? `${installCommand} && ${testCommand}` : testCommand;
+
+    const timeoutMs = Math.max(1, remainingMs());
+
+    const result = await runSandboxCommand({
+      containerName: options.runnerHandle,
+      workDir: runDir,
+      command: ['sh', '-c', script],
+      env: {
+        GAUNTLET_SUBMISSION_DIR: '/work/submission',
+        GAUNTLET_TEST_OUTPUT: '/work/run/test-results.json',
+        NODE_OPTIONS: '--max-old-space-size=256',
+        HOME: '/tmp',
+        NPM_CONFIG_CACHE: '/tmp/.npm',
+        NPM_CONFIG_AUDIT: 'false',
+        NPM_CONFIG_FUND: 'false',
+      },
+      timeoutMs,
+    });
+
+    logBuffer += `${result.stdout}\n${result.stderr}`;
+
+    if (result.timedOut || remainingMs() <= 0) {
+      await killSandbox(options.runnerHandle);
+      throw new TimeoutError('Execution timed out');
+    }
 
     if (!existsSync(outputPath)) {
       throw new Error('Test results file missing');
@@ -225,16 +378,16 @@ export async function scoreSubmission(
 
     const rawOutput = await fs.readFile(outputPath, 'utf8');
     const errorSummary =
-      testCommand.code === 0 && !testCommand.timedOut
+      result.code === 0 && !result.timedOut
         ? null
-        : `Tests failed${testCommand.timedOut ? ' (timeout)' : ''}`;
+        : `Tests failed${result.timedOut ? ' (timeout)' : ''}`;
 
     const parsed = parseTestOutput(rawOutput);
     const summaryLines = [
       '',
       'Gauntlet test summary',
       `Tests passed: ${parsed.testsPassed}/${parsed.testsTotal}`,
-      `Runtime: ${testCommand.durationMs}ms`,
+      `Runtime: ${result.durationMs}ms`,
       errorSummary ? `Status: ${errorSummary}` : 'Status: OK',
     ];
 
@@ -248,22 +401,34 @@ export async function scoreSubmission(
     }
 
     logBuffer += `${summaryLines.join('\n')}\n`;
-    const result = buildSubmissionResult(parsed, testCommand.durationMs, errorSummary);
+
+    const submissionResult = buildSubmissionResult(
+      parsed,
+      result.durationMs,
+      errorSummary,
+    );
 
     return {
-      result,
+      result: submissionResult,
       logExcerpt: tailLines(logBuffer, 200),
       errorSummary,
       commitHash,
+      timedOut: false,
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown runner error';
+    const timedOut = error instanceof TimeoutError;
+    const message = timedOut
+      ? 'Execution timed out'
+      : error instanceof Error
+        ? error.message
+        : 'Unknown runner error';
 
     return {
       result: null,
       logExcerpt: tailLines(logBuffer, 200),
       errorSummary: message,
       commitHash,
+      timedOut,
     };
   } finally {
     if (!process.env.KEEP_RUN_DIR) {

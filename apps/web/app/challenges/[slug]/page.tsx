@@ -15,6 +15,10 @@ type ChallengeResponse = {
   specMarkdown: string | null;
 };
 
+type HealthResponse = {
+  executionEnabled: boolean;
+};
+
 async function resolveBaseUrl() {
   const explicit = process.env.NEXT_PUBLIC_BASE_URL;
   if (explicit) return explicit.replace(/\/$/, '');
@@ -40,6 +44,18 @@ async function fetchChallenge(slug: string) {
   return (await response.json()) as ChallengeResponse;
 }
 
+async function fetchHealth(): Promise<HealthResponse | null> {
+  const baseUrl = await resolveBaseUrl();
+  if (!baseUrl) return null;
+
+  const response = await fetch(`${baseUrl}/api/health`, {
+    cache: 'no-store',
+  });
+
+  if (!response.ok) return null;
+  return (await response.json()) as HealthResponse;
+}
+
 type PageProps = {
   params: { slug: string } | Promise<{ slug: string }>;
 };
@@ -51,6 +67,9 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
 
   const data = await fetchChallenge(slug);
   if (!data) return notFound();
+
+  const health = await fetchHealth();
+  const executionEnabled = health?.executionEnabled ?? false;
 
   let leaderboard: Awaited<ReturnType<typeof getLeaderboardBySlug>> = [];
   try {
@@ -89,6 +108,36 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
             <div className="mt-6">
               <SubmissionForm challengeSlug={slug} />
             </div>
+          </Card>
+
+          <Card>
+            <h2 className="text-lg font-semibold text-slate-900">
+              How scoring works (v0.1)
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              If your solution passes these tests locally under the same runtime, it will
+              pass on Gauntlet.
+            </p>
+            <dl className="mt-4 space-y-2 text-sm text-slate-700">
+              <div className="flex items-center justify-between">
+                <dt className="font-semibold text-slate-600">Build-time</dt>
+                <dd>Honor system (for now)</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="font-semibold text-slate-600">Correctness</dt>
+                <dd>Official tests</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="font-semibold text-slate-600">Execution</dt>
+                <dd
+                  className={`font-semibold ${
+                    executionEnabled ? 'text-emerald-600' : 'text-amber-600'
+                  }`}
+                >
+                  {executionEnabled ? 'Active' : 'Paused'}
+                </dd>
+              </div>
+            </dl>
           </Card>
 
           <Card>

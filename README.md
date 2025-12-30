@@ -38,8 +38,16 @@ PORT=5433 ./scripts/dev-db.sh
 - `DATABASE_URL` (required) -- Postgres connection string.
 - `ADMIN_TOKEN` -- token for `/admin/submissions` and admin APIs.
 - `UPLOADS_DIR` -- ZIP upload storage (default: `./data/uploads`).
-- `RUNS_DIR` -- runner workspace (default: `./data/runs`).
+- `RUNS_DIR` -- runner workspace (default: `/tmp/gauntlet/jobs`).
 - `WORKER_POLL_INTERVAL_MS` -- polling interval for worker loop.
+- `WORKER_MAX_CONCURRENCY` -- max concurrent jobs per worker.
+- `WORKER_WATCHDOG_INTERVAL_MS` -- watchdog interval for stale jobs.
+- `MAX_JOB_RUNTIME_MS` -- hard runtime cap per job.
+- `WORKER_ENABLED` -- master kill switch for the worker.
+- `RUN_UNTRUSTED_CODE` -- explicit allow for execution.
+- `SUBMISSION_RATE_LIMIT_IP` -- per-IP submission cap.
+- `SUBMISSION_RATE_LIMIT_USER` -- per-display-name submission cap.
+- `DOCKER_NODE_IMAGE` -- container image for scoring.
 
 ## Database
 

@@ -6,10 +6,29 @@ import {
   normalizeRepoUrl,
 } from '@/lib/validation';
 import { MAX_ZIP_BYTES, saveZipFile } from '@/lib/uploads';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request) ?? 'unknown';
+  const ipLimit = Number(process.env.SUBMISSION_RATE_LIMIT_IP ?? 10);
+  const ipWindowMs = 60 * 60 * 1000;
+
+  const ipResult = checkRateLimit(`ip:${ip}`, ipLimit, ipWindowMs);
+  if (!ipResult.allowed) {
+    const retryAfterSeconds = Math.ceil(ipResult.retryAfterMs / 1000);
+    return NextResponse.json(
+      { error: 'Rate limit exceeded', retryAfterSeconds },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfterSeconds),
+        },
+      },
+    );
+  }
+
   const formData = await request.formData();
 
   const challengeSlug = String(formData.get('challengeSlug') || '');
@@ -36,6 +55,23 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+  }
+
+  const userLimit = Number(process.env.SUBMISSION_RATE_LIMIT_USER ?? 20);
+  const userWindowMs = 24 * 60 * 60 * 1000;
+  const userKey = `user:${parsed.data.displayName.toLowerCase()}`;
+  const userResult = checkRateLimit(userKey, userLimit, userWindowMs);
+  if (!userResult.allowed) {
+    const retryAfterSeconds = Math.ceil(userResult.retryAfterMs / 1000);
+    return NextResponse.json(
+      { error: 'Rate limit exceeded', retryAfterSeconds },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfterSeconds),
+        },
+      },
+    );
   }
 
   const challenge = await prisma.challenge.findUnique({
@@ -94,4 +130,16 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({ id: submission.id });
+}
+
+function getClientIp(request: Request) {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0]?.trim() || null;
+  }
+  return (
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-real-ip') ||
+    null
+  );
 }

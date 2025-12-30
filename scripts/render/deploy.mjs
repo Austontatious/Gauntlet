@@ -465,6 +465,8 @@ async function main() {
     DATABASE_URL: databaseUrl,
     ADMIN_TOKEN: process.env.ADMIN_TOKEN,
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+    WORKER_ENABLED: workerEnabled,
+    RUN_UNTRUSTED_CODE: runUntrusted,
   };
 
   const workerEnv = {

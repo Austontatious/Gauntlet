@@ -1,6 +1,8 @@
 # Security
 
-Gauntlet v0.1 executes untrusted code. This is a **baseline** implementation and not a hardened sandbox.
+Gauntlet v0.1 executes untrusted code. Scoring is **disabled by default** and must be
+explicitly enabled with `WORKER_ENABLED=true` and `RUN_UNTRUSTED_CODE=true`.
+This is a baseline sandbox, not a hardened production isolation boundary.
 
 ## Threat Model
 
@@ -11,24 +13,26 @@ Gauntlet v0.1 executes untrusted code. This is a **baseline** implementation and
 
 ## v0.1 Mitigations
 
-- Execution in a temporary workspace (`RUNS_DIR`) that is deleted after scoring.
-- Size limits on ZIP uploads (default 20MB).
-- File count limit on ZIP extraction.
-- Timeouts for install and test commands.
+- Kill switch: worker exits unless `WORKER_ENABLED` and `RUN_UNTRUSTED_CODE` are true.
+- Per-job Docker sandbox with `--network none`, read-only root FS, memory/pids/cpu limits.
+- Temp workspace per job under `RUNS_DIR`, deleted after scoring.
+- ZIP size + unzipped size + file count limits.
+- Hard runtime timeout plus watchdog cancellation for stale jobs.
+- Bounded concurrency via `WORKER_MAX_CONCURRENCY`.
+- Submission rate limiting (per IP + per display name).
 - Log excerpt truncation to a fixed number of lines.
 
 ## Known Gaps
 
-- No OS-level sandboxing (namespaces, seccomp, gVisor).
-- Network access is allowed during tests.
-- No strict memory or CPU quotas.
-- Dependency install still runs arbitrary scripts.
+- Docker is not a full sandbox (no custom seccomp/gVisor/Firecracker).
+- Git clone happens on the host and requires outbound network access.
+- In-memory rate limiting resets on deploy and does not share state across instances.
+- Dependency installs still execute arbitrary scripts (inside the container).
 
 ## v0.2 Hardening Plan
 
-- Run submissions in a container or Firecracker VM.
-- Disable outbound network egress.
-- Apply cgroup CPU/memory limits.
-- Read-only bind mounts for challenge tests.
-- Signed artifact pipeline for trusted runners.
-
+- Dedicated runner host or VM (gVisor/Firecracker) with stronger isolation.
+- Network egress control at the host level + allowlist for Git cloning.
+- Rootless containers and tighter filesystem permissions.
+- Artifact-based scoring pipeline (build once, test in sealed runner).
+- Centralized rate limiting (Redis/Upstash) + per-account quotas.

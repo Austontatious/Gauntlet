@@ -37,6 +37,8 @@ enum JobStatus {
   RUNNING
   COMPLETE
   FAILED
+  CANCELED
+  TIMEOUT
 }
 
 enum JobType {
@@ -77,15 +79,20 @@ model Submission {
 }
 
 model Job {
-  id        String    @id @default(cuid())
-  type      JobType
-  payload   Json
-  status    JobStatus @default(QUEUED)
-  lockedAt  DateTime?
-  lockedBy  String?
-  attempts  Int       @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  type         JobType
+  payload      Json
+  status       JobStatus @default(QUEUED)
+  lockedAt     DateTime?
+  lockedBy     String?
+  attempts     Int       @default(0)
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  timeoutAt    DateTime?
+  cancelReason String?
+  runnerHandle String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([status, createdAt])
 }

@@ -79,6 +79,9 @@ Response:
 { "id": "cku..." }
 ```
 
+Errors:
+- `429` if submission rate limit is exceeded (per IP and per display name).
+
 ## GET /api/submissions/:id
 
 Response:
@@ -104,6 +107,32 @@ Response:
 }
 ```
 
+## GET /api/health
+
+Returns execution status for the scorer.
+
+Response:
+```json
+{ "executionEnabled": false }
+```
+
+## POST /api/admin/jobs/:id/cancel
+
+Cancel a running job.
+
+Headers:
+- `x-admin-token: <ADMIN_TOKEN>`
+
+Body (optional):
+```json
+{ "reason": "manual_cancel" }
+```
+
+Response:
+```json
+{ "status": "CANCELED" }
+```
+
 ## POST /api/admin/seed
 
 Token-protected seed endpoint.
@@ -115,4 +144,3 @@ Response:
 ```json
 { "ok": true }
 ```
-
