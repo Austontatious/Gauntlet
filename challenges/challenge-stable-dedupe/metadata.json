@@ -1,6 +1,7 @@
 {
   "slug": "stable-dedupe",
-  "title": "Stable Dedupe",
+  "title": "Challenge 005: Stable Dedupe",
+  "shortDescription": "Remove duplicate strings while preserving the order of first occurrence.",
   "difficulty": "intermediate",
   "category": "data-structures",
   "maxRuntimeMs": 5000,

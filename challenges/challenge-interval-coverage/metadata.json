@@ -1,6 +1,7 @@
 {
   "slug": "interval-coverage",
-  "title": "Interval Coverage",
+  "title": "Challenge 006: Interval Coverage",
+  "shortDescription": "Compute how many integer points are covered by at least one closed interval.",
   "difficulty": "intermediate",
   "category": "algorithms",
   "maxRuntimeMs": 5000,

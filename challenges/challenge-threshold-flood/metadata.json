@@ -1,6 +1,7 @@
 {
   "slug": "threshold-flood",
-  "title": "Threshold Flood",
+  "title": "Challenge 009: Threshold Flood",
+  "shortDescription": "For each query, count cells reachable from a start position using only grid values >= threshold.",
   "difficulty": "advanced",
   "category": "graphs",
   "maxRuntimeMs": 5000,

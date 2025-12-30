@@ -1,6 +1,7 @@
 {
   "slug": "min-rotations",
-  "title": "Minimal Rotations",
+  "title": "Challenge 008: Minimal Rotations",
+  "shortDescription": "Find the minimum left-rotations needed to transform one string into another (or -1 if impossible).",
   "difficulty": "advanced",
   "category": "strings",
   "maxRuntimeMs": 5000,

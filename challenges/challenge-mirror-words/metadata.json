@@ -1,6 +1,7 @@
 {
   "slug": "mirror-words",
-  "title": "Mirror Words",
+  "title": "Challenge 002: Mirror Words",
+  "shortDescription": "Reverse each word in a string while preserving word order and normalizing whitespace.",
   "difficulty": "beginner",
   "category": "strings",
   "maxRuntimeMs": 5000,

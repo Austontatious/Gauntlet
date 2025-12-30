@@ -1,6 +1,7 @@
 {
   "slug": "even-split",
-  "title": "Even Split",
+  "title": "Challenge 003: Even Split",
+  "shortDescription": "Split a total into n non-negative integers as evenly as possible, with earlier parts taking leftovers.",
   "difficulty": "beginner",
   "category": "math",
   "maxRuntimeMs": 5000,

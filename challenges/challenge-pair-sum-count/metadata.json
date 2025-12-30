@@ -1,6 +1,7 @@
 {
   "slug": "pair-sum-count",
-  "title": "Pair Sum Count",
+  "title": "Challenge 007: Pair Sum Count",
+  "shortDescription": "Count the number of index pairs (i < j) whose values sum to a target.",
   "difficulty": "intermediate",
   "category": "algorithms",
   "maxRuntimeMs": 5000,

@@ -1,6 +1,7 @@
 {
   "slug": "peak-count",
-  "title": "Peak Count",
+  "title": "Challenge 004: Peak Count",
+  "shortDescription": "Count how many array elements are strictly greater than both immediate neighbors.",
   "difficulty": "beginner",
   "category": "arrays",
   "maxRuntimeMs": 5000,

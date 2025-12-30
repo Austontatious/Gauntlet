@@ -1,6 +1,7 @@
 {
   "slug": "streaming-median",
-  "title": "Streaming Median With Deletions",
+  "title": "Challenge 010: Streaming Median With Deletions",
+  "shortDescription": "Maintain a multiset under insert/delete and output the lower median on demand.",
   "difficulty": "expert",
   "category": "data-structures",
   "maxRuntimeMs": 5000,
