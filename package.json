@@ -10,7 +10,7 @@
     "dev:web": "pnpm --filter @gauntlet/core build && pnpm --filter web dev",
     "dev:worker": "pnpm --filter @gauntlet/core build && pnpm --filter worker dev",
     "build": "pnpm -r build",
-    "build:web": "pnpm --filter @gauntlet/core build && pnpm --filter web build",
+    "build:web": "pnpm prisma generate && pnpm --filter @gauntlet/core build && pnpm --filter web build",
     "build:worker": "pnpm --filter @gauntlet/core build && pnpm --filter worker build",
     "lint": "pnpm -r lint",
     "start:web": "pnpm --filter web start",
