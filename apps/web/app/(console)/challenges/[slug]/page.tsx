@@ -88,13 +88,13 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
               {data.title}
             </h1>
             {data.shortDescription ? (
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
+              <p className="mt-2 text-[0.95rem] leading-[1.6] text-[color:var(--muted)]">
                 {data.shortDescription}
               </p>
             ) : null}
           </div>
 
-          <Card className="text-sm text-[color:var(--muted)]">
+          <Card className="text-[color:var(--muted)]">
             <div className="markdown">
               <Markdown content={data.specMarkdown ?? ''} />
             </div>
@@ -106,7 +106,7 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-semibold text-[color:var(--text)]">
               Submit your run
             </h2>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
+            <p className="mt-2 text-[0.95rem] leading-[1.6] text-[color:var(--muted)]">
               Submit a public GitHub repo or a ZIP. The runner will score it in the background.
             </p>
             <div className="mt-6">
@@ -118,7 +118,7 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-semibold text-[color:var(--text)]">
               How scoring works (v0.1)
             </h2>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
+            <p className="mt-2 text-[0.95rem] leading-[1.6] text-[color:var(--muted)]">
               If your solution passes these tests locally under the same runtime, it will
               pass on Gauntlet.
             </p>
@@ -152,7 +152,7 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
                 Leaderboard preview
               </h2>
               <a
-                className="text-sm font-semibold text-[color:var(--primary)] hover:text-[color:var(--primary-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
+                className="text-sm font-semibold text-[color:var(--link)] hover:text-[color:var(--link-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
                 href={`/challenges/${slug}/leaderboard`}
               >
                 Full board -&gt;
@@ -160,7 +160,7 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
             </div>
             <div className="mt-4 space-y-3">
               {leaderboard.length === 0 ? (
-                <p className="text-sm text-[color:var(--muted)]">
+                <p className="text-[0.95rem] text-[color:var(--muted)]">
                   No submissions scored yet.
                 </p>
               ) : (

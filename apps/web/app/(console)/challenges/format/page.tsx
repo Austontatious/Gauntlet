@@ -24,12 +24,12 @@ export default async function ChallengeFormatSpecPage() {
           <h1 className="mt-4 text-3xl font-semibold text-[color:var(--text)]">
             Challenge Format Specification
           </h1>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
+          <p className="mt-2 text-[0.95rem] leading-[1.6] text-[color:var(--muted)]">
             The canonical structure and constraints for Gauntlet challenges.
           </p>
         </div>
 
-        <Card className="text-sm text-[color:var(--muted)]">
+        <Card className="text-[color:var(--muted)]">
           <div className="markdown">
             <Markdown content={content} />
           </div>

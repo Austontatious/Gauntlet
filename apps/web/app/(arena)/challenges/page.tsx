@@ -14,12 +14,12 @@ export default async function ChallengesPage() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold text-[color:var(--text)]">Challenges</h1>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
+            <p className="mt-2 text-[0.95rem] leading-[1.6] text-[color:var(--muted)]">
               Pick a spec, ship a solution, and climb the board.
             </p>
             <Link
               href="/challenges/format"
-              className="mt-3 inline-flex text-sm font-semibold text-[color:var(--primary)] hover:text-[color:var(--primary-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
+              className="mt-3 inline-flex text-[0.95rem] font-semibold text-[color:var(--link)] hover:text-[color:var(--link-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
             >
               Challenge format spec -&gt;
             </Link>
@@ -41,12 +41,12 @@ export default async function ChallengesPage() {
                     <h2 className="text-xl font-semibold text-[color:var(--text)]">
                       {challenge.title}
                     </h2>
-                    <p className="mt-2 text-sm text-[color:var(--muted)]">
+                    <p className="mt-2 text-[0.95rem] leading-[1.6] text-[color:var(--muted)]">
                       {challenge.shortDescription}
                     </p>
                   </div>
                 </div>
-                <span className="text-sm font-semibold text-[color:var(--primary)] group-hover:text-[color:var(--primary-2)]">
+                <span className="text-[0.95rem] font-semibold text-[color:var(--link)] group-hover:text-[color:var(--link-hover)]">
                   View challenge -&gt;
                 </span>
               </Card>

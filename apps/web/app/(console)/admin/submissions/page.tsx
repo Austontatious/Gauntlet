@@ -21,7 +21,7 @@ export default async function AdminSubmissionsPage({
             <h1 className="text-xl font-semibold text-[color:var(--text)]">
               Unauthorized
             </h1>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
+            <p className="mt-2 text-[0.95rem] leading-[1.6] text-[color:var(--muted)]">
               Provide a valid ADMIN_TOKEN via ?token= or x-admin-token header.
             </p>
           </Card>
@@ -91,7 +91,7 @@ export default async function AdminSubmissionsPage({
                     </td>
                     <td className="py-3">
                       <a
-                        className="text-[color:var(--primary)] hover:text-[color:var(--primary-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
+                        className="text-[color:var(--link)] hover:text-[color:var(--link-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
                         href={`/submissions/${submission.id}`}
                       >
                         view

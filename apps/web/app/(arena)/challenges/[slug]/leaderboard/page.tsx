@@ -28,14 +28,16 @@ export default async function LeaderboardPage({ params }: PageProps) {
           <h1 className="mt-4 text-3xl font-semibold text-[color:var(--text)]">
             Leaderboard
           </h1>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
+          <p className="mt-2 text-[0.95rem] leading-[1.6] text-[color:var(--muted)]">
             {data.challenge.title}
           </p>
         </div>
 
         <Card className="overflow-hidden">
           {leaderboard.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">No scored submissions yet.</p>
+            <p className="text-[0.95rem] text-[color:var(--muted)]">
+              No scored submissions yet.
+            </p>
           ) : (
             <div className="max-h-[560px] overflow-auto">
               <table className="w-full text-left text-sm">
@@ -72,7 +74,7 @@ export default async function LeaderboardPage({ params }: PageProps) {
                       <td className="py-3">
                         {entry.repoUrl ? (
                           <a
-                            className="text-[color:var(--primary)] hover:text-[color:var(--primary-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
+                            className="text-[color:var(--link)] hover:text-[color:var(--link-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
                             href={entry.repoUrl}
                           >
                             repo

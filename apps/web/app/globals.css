@@ -7,11 +7,13 @@
   --panel: rgba(10, 15, 33, 0.6);
   --panel-2: rgba(10, 15, 33, 0.85);
   --text: #e6f1ff;
-  --muted: #9aa7c5;
+  --muted: #a7b6d5;
   --border: rgba(120, 160, 255, 0.25);
   --border-2: rgba(120, 160, 255, 0.4);
   --primary: #42f5b6;
   --primary-2: #13d9ff;
+  --link: #2fd9a8;
+  --link-hover: #42f5b6;
   --accent: #8f6bff;
   --danger: #ff5d6c;
   --success: #39f7a2;
@@ -25,11 +27,13 @@
   --panel: rgba(10, 15, 33, 0.6);
   --panel-2: rgba(10, 15, 33, 0.85);
   --text: #e6f1ff;
-  --muted: #9aa7c5;
+  --muted: #a7b6d5;
   --border: rgba(120, 160, 255, 0.25);
   --border-2: rgba(120, 160, 255, 0.45);
   --primary: #42f5b6;
   --primary-2: #13d9ff;
+  --link: #2fd9a8;
+  --link-hover: #42f5b6;
   --accent: #8f6bff;
   --danger: #ff5d6c;
   --success: #39f7a2;
@@ -43,11 +47,13 @@
   --panel: rgba(9, 24, 16, 0.85);
   --panel-2: rgba(7, 18, 12, 0.95);
   --text: #e2f8e9;
-  --muted: #8fb0a0;
+  --muted: #9fbeaf;
   --border: rgba(76, 130, 96, 0.35);
   --border-2: rgba(116, 185, 125, 0.5);
   --primary: #4dff96;
   --primary-2: #9affc5;
+  --link: #3fe089;
+  --link-hover: #4dff96;
   --accent: #f5c46a;
   --danger: #ff6b6b;
   --success: #5affb0;
@@ -163,6 +169,10 @@ a {
     0 18px 44px -40px rgba(2, 8, 5, 0.9);
 }
 
+.markdown {
+  font-size: 0.98rem;
+}
+
 .markdown h1,
 .markdown h2,
 .markdown h3 {
@@ -181,7 +191,7 @@ a {
 
 .markdown p {
   margin-top: 0.75rem;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--muted);
 }
 
@@ -190,6 +200,7 @@ a {
   padding-left: 1.5rem;
   margin-top: 0.75rem;
   color: var(--muted);
+  line-height: 1.65;
 }
 
 .markdown code {
