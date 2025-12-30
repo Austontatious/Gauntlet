@@ -54,6 +54,17 @@ Runner must not have:
 - Schedule regular backups (daily or hourly depending on throughput).
 - Monitor connection counts; Prisma defaults can exhaust small plans.
 
+## Seeding & Metadata
+
+- `pnpm seed` seeds challenges from `challenges/*/metadata.json` (challenge-001 uses fallback data).
+- `pnpm seed:challenge-metadata` updates UI-facing titles and short descriptions for existing challenges.
+- `pnpm render:migrate` runs `pnpm db:deploy`, `pnpm seed`, and `pnpm seed:challenge-metadata` for Render.
+
+## Admin Maintenance
+
+- `POST /api/admin/seed` (with `x-admin-token`) refreshes challenge-001 and the UI metadata for new challenges.
+- Optional: `POST /api/admin/seed?clearSlug=challenge-001` deletes submissions for that challenge.
+
 ## Worker Scaling
 
 - Horizontal scaling is supported by job locking.

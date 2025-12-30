@@ -120,6 +120,7 @@ Dev:
 Prod:
 - `pnpm db:deploy` (Prisma migrate deploy)
 - `pnpm seed`
+- `pnpm seed:challenge-metadata`
 
 v0.1 safe approach:
 - Use managed Postgres created via Blueprint or API, then run `pnpm db:deploy` and `pnpm seed` as a controlled, operator-invoked step.
@@ -130,8 +131,9 @@ Initial prod bootstrap runbook:
 1. Provision Postgres.
 2. Run `pnpm db:deploy`.
 3. Run `pnpm seed`.
-4. Verify challenge #001 exists in the UI.
-5. Rotate/lock down ADMIN_TOKEN.
+4. Run `pnpm seed:challenge-metadata`.
+5. Verify challenge #001 exists in the UI.
+6. Rotate/lock down ADMIN_TOKEN.
 
 v0.2 hardened approach:
 - Add a dedicated release workflow or one-off migration service that runs migrations on deploy, with explicit idempotency and rollback runbooks.

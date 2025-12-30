@@ -152,7 +152,18 @@ Token-protected seed endpoint.
 Headers:
 - `x-admin-token: <ADMIN_TOKEN>`
 
+Query params:
+- `clearSlug` (optional) -- deletes submissions for the given challenge slug.
+
 Response:
 ```json
-{ "ok": true }
+{
+  "ok": true,
+  "updated": [
+    { "slug": "mirror-words", "updated": 1 }
+  ],
+  "cleared": { "slug": "challenge-001", "deleted": 12 }
+}
 ```
+
+`cleared` is `null` when `clearSlug` is omitted.

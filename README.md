@@ -87,7 +87,8 @@ curl -s http://localhost:3000/api/submissions/<id>
 ## Challenges
 
 - Challenge assets live under `challenges/`.
-- `pnpm seed` seeds Challenge 001.
+- `pnpm seed` seeds challenges from `metadata.json` (Challenge 001 uses fallback data).
+- `pnpm seed:challenge-metadata` updates UI-facing titles and descriptions.
 - `pnpm create-challenge <slug>` scaffolds a new challenge folder.
 
 ## Running the Apps
