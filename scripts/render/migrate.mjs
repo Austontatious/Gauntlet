@@ -413,7 +413,7 @@ async function main() {
       plan: servicePlan,
       envSpecificDetails: {
         buildCommand: 'pnpm install --frozen-lockfile',
-        startCommand: 'pnpm db:deploy && pnpm seed',
+        startCommand: 'pnpm db:deploy && pnpm seed && pnpm seed:challenge-metadata',
       },
     },
   };
