@@ -344,7 +344,10 @@ async function main() {
   const ownerIdEnv = process.env.RENDER_OWNER_ID;
   const ownerName = process.env.RENDER_OWNER_NAME;
   const migrateName = process.env.RENDER_MIGRATE_SERVICE_NAME || 'gauntlet-migrate';
-  const workerName = process.env.RENDER_WORKER_SERVICE_NAME || 'gauntlet-worker';
+  const workerName =
+    process.env.RENDER_RUNNER_SERVICE_NAME ||
+    process.env.RENDER_WORKER_SERVICE_NAME ||
+    'gauntlet-runner';
   const dbName = process.env.RENDER_POSTGRES_NAME || 'gauntlet-db';
 
   const repoUrl =
