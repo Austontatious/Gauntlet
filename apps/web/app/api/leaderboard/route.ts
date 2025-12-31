@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeaderboardBySlug } from '@/lib/leaderboard';
+import { getGlobalLeaderboard } from '@/lib/leaderboard';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> },
-) {
-  const { slug } = await params;
+export async function GET(request: NextRequest) {
   const limitParam = request.nextUrl.searchParams.get('limit');
   const parsedLimit = Math.min(Math.max(Number(limitParam ?? 10), 1), 100);
   const limit = Number.isFinite(parsedLimit) ? parsedLimit : 10;
-  const rows = await getLeaderboardBySlug(slug, limit);
+  const rows = await getGlobalLeaderboard(limit);
 
   return NextResponse.json({
-    scope: 'challenge',
-    slug,
+    scope: 'global',
     limit,
     rows: rows.map((row, index) => ({
       rank: index + 1,

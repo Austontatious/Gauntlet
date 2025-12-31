@@ -1,35 +1,22 @@
-import { notFound } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getChallengeBySlug } from '@/lib/challenges';
-import { getLeaderboardBySlug } from '@/lib/leaderboard';
+import { getGlobalLeaderboard } from '@/lib/leaderboard';
 
 export const dynamic = 'force-dynamic';
 
-type PageProps = {
-  params: { slug: string } | Promise<{ slug: string }>;
-};
-
-export default async function LeaderboardPage({ params }: PageProps) {
-  const resolvedParams = await Promise.resolve(params);
-  const slug = resolvedParams?.slug;
-  if (!slug) return notFound();
-
-  const data = await getChallengeBySlug(slug);
-  if (!data) return notFound();
-
-  const leaderboard = await getLeaderboardBySlug(slug);
+export default async function GlobalLeaderboardPage() {
+  const leaderboard = await getGlobalLeaderboard(10);
 
   return (
     <main className="px-6 pb-16 md:px-12">
       <section className="mx-auto max-w-6xl space-y-6">
         <div>
-          <Badge>{data.challenge.slug}</Badge>
+          <Badge>Global</Badge>
           <h1 className="mt-4 text-3xl font-semibold text-[color:var(--text)]">
             Leaderboard
           </h1>
           <p className="mt-2 text-[0.95rem] leading-[1.6] text-[color:var(--muted)]">
-            {data.challenge.title}
+            Top submissions across every challenge.
           </p>
         </div>
 
@@ -45,12 +32,12 @@ export default async function LeaderboardPage({ params }: PageProps) {
                   <tr>
                     <th className="py-3">Rank</th>
                     <th className="py-3">User</th>
+                    <th className="py-3">Challenge</th>
                     <th className="py-3">Method</th>
                     <th className="py-3">Score</th>
                     <th className="py-3">Runtime</th>
                     <th className="py-3">Self-time</th>
                     <th className="py-3">Submitted</th>
-                    <th className="py-3">Repo</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[color:var(--border)]">
@@ -63,6 +50,14 @@ export default async function LeaderboardPage({ params }: PageProps) {
                         #{index + 1}
                       </td>
                       <td className="py-3">{entry.displayName}</td>
+                      <td className="py-3">
+                        <div className="flex flex-col">
+                          <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">
+                            {entry.challenge.slug}
+                          </span>
+                          <span>{entry.challenge.title}</span>
+                        </div>
+                      </td>
                       <td className="py-3 text-[color:var(--muted)]">{entry.methodUsed}</td>
                       <td className="py-3">
                         {(entry.passRate * 100).toFixed(2)}%
@@ -72,25 +67,15 @@ export default async function LeaderboardPage({ params }: PageProps) {
                       </td>
                       <td className="py-3">{entry.runtimeMs}ms</td>
                       <td className="py-3">
-                        {entry.selfReportedMinutes ? `${entry.selfReportedMinutes}m` : '--'}
+                        {entry.selfReportedMinutes
+                          ? `${entry.selfReportedMinutes}m`
+                          : '--'}
                       </td>
                       <td className="py-3">
                         {entry.createdAt.toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                         })}
-                      </td>
-                      <td className="py-3">
-                        {entry.repoUrl ? (
-                          <a
-                            className="text-[color:var(--link)] hover:text-[color:var(--link-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)]"
-                            href={entry.repoUrl}
-                          >
-                            repo
-                          </a>
-                        ) : (
-                          '--'
-                        )}
                       </td>
                     </tr>
                   ))}

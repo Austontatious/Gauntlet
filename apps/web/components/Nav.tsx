@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 const links = [
   { href: '/challenges', label: 'Challenges' },
-  { href: '/challenges/challenge-001/leaderboard', label: 'Leaderboard' },
+  { href: '/leaderboard', label: 'Leaderboard' },
   { href: '/admin/submissions', label: 'Admin' },
 ];
 

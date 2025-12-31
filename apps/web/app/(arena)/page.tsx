@@ -22,7 +22,7 @@ export default function Home() {
               <Link href="/challenges">Pick a challenge</Link>
             </Button>
             <Button asChild variant="secondary" size="lg">
-              <Link href="/challenges/challenge-001/leaderboard">View leaderboard</Link>
+              <Link href="/leaderboard">View leaderboard</Link>
             </Button>
           </div>
         </div>
