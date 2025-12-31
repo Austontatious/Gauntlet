@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { resolveRepoRoot } from '@/lib/paths';
 
@@ -56,7 +57,8 @@ export async function POST(request: Request) {
     const metadataPath = path.join(challengeDir, 'metadata.json');
 
     const metadata = await readJsonIfExists<ChallengeMetadata>(metadataPath);
-    const scoringConfig = (await readJsonIfExists<Record<string, unknown>>(scoringPath)) ?? {};
+    const scoringConfig: Prisma.InputJsonValue =
+      (await readJsonIfExists<Prisma.InputJsonValue>(scoringPath)) ?? {};
 
     let slug = metadata?.slug;
     let title = metadata?.title;
