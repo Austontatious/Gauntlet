@@ -6,12 +6,19 @@ Return the number of integer points covered by at least one interval.
 
 Example: `[1,3]` covers points `{1,2,3}`.
 
+## Notes
+- We count integer points, and intervals are closed and inclusive.
+- Intervals are not guaranteed to be sorted.
+- Two intervals are connected if they overlap or touch.
+- Example: `[1,2]` and `[3,4]` cover `{1,2,3,4}` for a total of 4 points.
+- When merging sorted intervals, start a new segment only if `l > curR + 1`.
+
 ## Inputs and Outputs
 ### Input
 An array of intervals `intervals`, where each interval is a 2-element array `[l, r]`.
 
 ### Output
-A single integer: the count of covered integer points.
+A single integer as a BigInt: the count of covered integer points.
 
 ## Submission Interface
 Your submission **must** include `solution.js` that exports:

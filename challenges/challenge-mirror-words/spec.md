@@ -25,6 +25,6 @@ Your submission **must** include `solution.js` that exports:
   points to the root directory of the submitted solution
 
 ## Constraints
-- `s.length` <= 200,000
+- `s.length` <= 300,000
 - Expected time complexity: O(n)
 - Must be deterministic

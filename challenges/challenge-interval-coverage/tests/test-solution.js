@@ -23,9 +23,8 @@ test("interval-coverage: cases", async () => {
 
   for (const [intervals, expectedBig] of cases) {
     const out = solve(intervals);
-    assert.equal(Number.isInteger(out) || typeof out === "bigint", true, "Output must be integer or bigint");
-    const outBig = typeof out === "bigint" ? out : BigInt(out);
-    assert.equal(outBig, expectedBig);
+    assert.equal(typeof out, "bigint", "Output must be a BigInt");
+    assert.equal(out, expectedBig);
   }
 });
 
@@ -41,6 +40,6 @@ test("interval-coverage: deterministic sanity vs ref", async () => {
   }
   const expected = coverageRef(intervals);
   const out = solve(intervals);
-  const outBig = typeof out === "bigint" ? out : BigInt(out);
-  assert.equal(outBig, expected);
+  assert.equal(typeof out, "bigint", "Output must be a BigInt");
+  assert.equal(out, expected);
 });

@@ -23,6 +23,6 @@ Your submission **must** include `solution.js` that exports:
 - `GAUNTLET_SUBMISSION_DIR` points to the submission root
 
 ## Constraints
-- `1 <= lines.length <= 200,000`
+- `0 <= lines.length <= 200,000`
 - Total characters across all lines <= ~10MB
 - Expected time complexity: O(n)
