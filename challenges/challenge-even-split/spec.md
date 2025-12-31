@@ -17,6 +17,15 @@ An array of `n` integers representing the split.
 Your submission **must** include `solution.js` that exports:
 - `export function solve(total, n)`
 
+## Submission Contract (Gauntlet Standard)
+- Submit a directory containing `solution.js` at its root.
+- `solution.js` must export a named function `solve` matching the signature below.
+- You do **not** submit tests. Gauntlet runs the **official tests bundled with this challenge**.
+- During execution, `GAUNTLET_SUBMISSION_DIR` points to your submission root.
+  The official tests will import your code from:
+  - `${GAUNTLET_SUBMISSION_DIR}/solution.js`
+- Your solution must be deterministic and must not read/write files outside `GAUNTLET_SUBMISSION_DIR`.
+
 ## Execution Environment (Guaranteed)
 - Runtime: Node.js 22+
 - Test runner: node --test

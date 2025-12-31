@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "rm -rf dist && tsc -p tsconfig.build.json && mkdir -p dist/sandbox && cp sandbox/network_blocker.cjs dist/sandbox/",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && mkdir -p dist/sandbox && cp sandbox/network_blocker.cjs dist/sandbox/ && cp src/gauntlet-reporter.mjs dist/gauntlet-reporter.mjs && cp -R ../../challenges dist/challenges",
     "start": "node dist/index.js",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",

@@ -1,34 +1,44 @@
 # Challenge 001: Sum Signal
 
-## Objective
+## Problem Statement
 Implement a function that returns the sum of all numbers in an array.
 
 ## Requirements
-- Export a `sum` function from `src/solution.js`.
-- `sum(numbers)` must return the total of all numeric values.
+- Export a `solve` function from `solution.js`.
+- `solve(numbers)` must return the total of all numeric values.
 - Support negative numbers.
 - Return `0` for an empty array.
 
-## Interface
+## Submission Interface
+Your submission **must** include `solution.js` that exports:
+- `export function solve(numbers)`
 
 ```js
-// src/solution.js
-function sum(numbers) {
+// solution.js
+export function solve(numbers) {
   // ...
 }
-
-module.exports = { sum };
 ```
+
+## Submission Contract (Gauntlet Standard)
+- Submit a directory containing `solution.js` at its root.
+- `solution.js` must export a named function `solve` matching the signature below.
+- You do **not** submit tests. Gauntlet runs the **official tests bundled with this challenge**.
+- During execution, `GAUNTLET_SUBMISSION_DIR` points to your submission root.
+  The official tests will import your code from:
+  - `${GAUNTLET_SUBMISSION_DIR}/solution.js`
+- Your solution must be deterministic and must not read/write files outside `GAUNTLET_SUBMISSION_DIR`.
 
 ## Examples
 
 ```js
-sum([1, 2, 3]) // 6
-sum([-2, 5])   // 3
-sum([])        // 0
+solve([1, 2, 3]) // 6
+solve([-2, 5])   // 3
+solve([])        // 0
 ```
 
-## Notes
-- The official tests are in `challenges/challenge-001/tests`.
-- The runner sets `GAUNTLET_SUBMISSION_DIR` so tests can locate your code.
-- Use Node 22+ and run tests via `node --test`.
+## Execution Environment (Guaranteed)
+- Runtime: Node.js 22+
+- Test runner: node --test
+- Official tests are located in this challenge's `tests/` directory
+- `GAUNTLET_SUBMISSION_DIR` points to the submission root

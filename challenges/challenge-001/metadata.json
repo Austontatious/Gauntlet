@@ -1,0 +1,9 @@
+{
+  "slug": "challenge-001",
+  "title": "Challenge 001: Sum Signal",
+  "shortDescription": "Compute the sum of all numbers in an array.",
+  "difficulty": "beginner",
+  "category": "arrays",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

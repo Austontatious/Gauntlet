@@ -18,11 +18,20 @@ Example: `[1,3]` covers points `{1,2,3}`.
 An array of intervals `intervals`, where each interval is a 2-element array `[l, r]`.
 
 ### Output
-A single integer as a BigInt: the count of covered integer points.
+Return a BigInt: the number of covered integer points.
 
 ## Submission Interface
 Your submission **must** include `solution.js` that exports:
 - `export function solve(intervals)`
+
+## Submission Contract (Gauntlet Standard)
+- Submit a directory containing `solution.js` at its root.
+- `solution.js` must export a named function `solve` matching the signature below.
+- You do **not** submit tests. Gauntlet runs the **official tests bundled with this challenge**.
+- During execution, `GAUNTLET_SUBMISSION_DIR` points to your submission root.
+  The official tests will import your code from:
+  - `${GAUNTLET_SUBMISSION_DIR}/solution.js`
+- Your solution must be deterministic and must not read/write files outside `GAUNTLET_SUBMISSION_DIR`.
 
 ## Execution Environment (Guaranteed)
 - Runtime: Node.js 22+

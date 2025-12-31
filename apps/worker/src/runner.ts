@@ -6,8 +6,8 @@ import AdmZip from 'adm-zip';
 import type { Challenge, Submission } from '@prisma/client';
 import { buildSubmissionResult, parseTestOutput } from '@gauntlet/core';
 import { runCommand } from './utils/command.js';
-import { copyDir, ensureDir, tailLines } from './utils/files.js';
-import { resolveRepoRoot } from './utils/paths.js';
+import { ensureDir, tailLines } from './utils/files.js';
+import { getChallengeDir, getTestsDir, resolveRepoRoot } from './utils/paths.js';
 
 interface ScoringConfig {
   testsPath: string;
@@ -78,6 +78,13 @@ class TimeoutError extends Error {
   }
 }
 
+class PlatformMisconfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PlatformMisconfigError';
+  }
+}
+
 function normalizeNumber(value: unknown, fallback: number) {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
@@ -110,22 +117,6 @@ function parseConfig(config: unknown): ScoringConfig {
       DEFAULT_CONFIG.totalTimeoutMs,
     ),
   };
-}
-
-async function collectTestFiles(dir: string): Promise<string[]> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  const files: string[] = [];
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await collectTestFiles(fullPath)));
-    } else if (entry.isFile() && /\.test\.(c|m)?js$/i.test(entry.name)) {
-      files.push(fullPath);
-    }
-  }
-
-  return files;
 }
 
 async function measureDirectorySize(dir: string, maxBytes: number): Promise<number> {
@@ -253,6 +244,7 @@ function resolveNetworkBlockerPath(repoRoot: string) {
   const candidates = [
     path.join(repoRoot, 'apps', 'worker', 'dist', 'sandbox', 'network_blocker.cjs'),
     path.join(repoRoot, 'apps', 'worker', 'sandbox', 'network_blocker.cjs'),
+    path.join(repoRoot, 'sandbox', 'network_blocker.cjs'),
   ];
 
   for (const candidate of candidates) {
@@ -260,6 +252,24 @@ function resolveNetworkBlockerPath(repoRoot: string) {
   }
 
   throw new Error('Missing network blocker script');
+}
+
+function resolveReporterPath(repoRoot: string) {
+  const candidates = [
+    path.join(repoRoot, 'apps', 'worker', 'dist', 'gauntlet-reporter.mjs'),
+    path.join(repoRoot, 'apps', 'worker', 'src', 'gauntlet-reporter.mjs'),
+    path.join(repoRoot, 'gauntlet-reporter.mjs'),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  throw new PlatformMisconfigError(
+    `Platform misconfigured: missing gauntlet reporter module. Expected one of: ${candidates.join(
+      ', ',
+    )}`,
+  );
 }
 
 export async function scoreSubmission(
@@ -279,11 +289,9 @@ export async function scoreSubmission(
 
   const runDir = await fs.mkdtemp(path.join(baseDir, `${submission.id}-`));
   const submissionDir = path.join(runDir, 'submission');
-  const testsDir = path.join(runDir, 'tests');
   const runOutputDir = path.join(runDir, 'run');
 
   await ensureDir(submissionDir);
-  await ensureDir(testsDir);
   await ensureDir(runOutputDir);
 
   let logBuffer = '';
@@ -308,21 +316,27 @@ export async function scoreSubmission(
 
     await assertWorkspaceSize(submissionDir, config.maxWorkspaceBytes);
 
-    const challengeDir = path.dirname(path.resolve(repoRoot, challenge.specMarkdownPath));
-    const testSourceDir = path.join(challengeDir, config.testsPath);
-    await copyDir(testSourceDir, testsDir);
-
-    const testFiles = await collectTestFiles(testsDir);
-    if (testFiles.length === 0) {
-      throw new Error('No test files found');
+    const solutionPath = path.join(submissionDir, 'solution.js');
+    if (!existsSync(solutionPath)) {
+      throw new Error(`Submission missing solution.js at ${solutionPath}`);
     }
 
-    const reporterSource = path.join(testSourceDir, 'gauntlet-reporter.mjs');
-    const reporterDest = path.join(runDir, 'gauntlet-reporter.mjs');
-    if (!existsSync(reporterSource)) {
-      throw new Error('Missing gauntlet-reporter.mjs in challenge tests');
+    const challengeDir = getChallengeDir(repoRoot, challenge.slug);
+    const testsDir = getTestsDir(repoRoot, challenge.slug);
+    if (!existsSync(testsDir)) {
+      throw new PlatformMisconfigError(
+        `Challenge misconfigured: missing official tests at ${testsDir}.`,
+      );
     }
-    await fs.copyFile(reporterSource, reporterDest);
+
+    const testFile = path.join(testsDir, 'test-solution.js');
+    if (!existsSync(testFile)) {
+      throw new PlatformMisconfigError(
+        `Challenge misconfigured: missing test-solution.js at ${testFile}.`,
+      );
+    }
+
+    const reporterPath = resolveReporterPath(repoRoot);
 
     await assertWorkspaceSize(runDir, config.maxWorkspaceBytes);
 
@@ -339,13 +353,13 @@ export async function scoreSubmission(
       blockerPath,
       '--test',
       '--test-reporter',
-      reporterDest,
-      ...testFiles,
+      reporterPath,
+      testFile,
     ];
     const timeoutMs = Math.max(1, Math.min(config.testTimeoutMs, remainingMs()));
 
     const result = await runCommand('node', testArgs, {
-      cwd: runDir,
+      cwd: challengeDir,
       env: {
         GAUNTLET_SUBMISSION_DIR: submissionDir,
         GAUNTLET_TEST_OUTPUT: outputPath,
