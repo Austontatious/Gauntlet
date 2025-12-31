@@ -41,24 +41,55 @@ Response:
 }
 ```
 
-## GET /api/challenges/:slug/leaderboard
+## GET /api/leaderboard
+
+Query params:
+- `limit` (optional, default 10, max 100)
 
 Response:
 ```json
-[
-  {
-    "submissionId": "cku...",
-    "displayName": "Ada",
-    "methodUsed": "VIBE",
-    "selfReportedMinutes": 42,
-    "passRate": 1,
-    "testsPassed": 4,
-    "testsTotal": 4,
-    "runtimeMs": 1200,
-    "createdAt": "2024-01-01T12:00:00.000Z",
-    "repoUrl": "https://github.com/..."
-  }
-]
+{
+  "scope": "global",
+  "limit": 10,
+  "rows": [
+    {
+      "rank": 1,
+      "challenge": { "slug": "mirror-words", "title": "Challenge 002: Mirror Words" },
+      "user": { "handle": "Ada" },
+      "method": "VIBE",
+      "score": 100,
+      "selfTimeSec": 2520,
+      "runtimeMs": 1200,
+      "createdAt": "2024-01-01T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+## GET /api/challenges/:slug/leaderboard
+
+Query params:
+- `limit` (optional, default 10, max 100)
+
+Response:
+```json
+{
+  "scope": "challenge",
+  "slug": "mirror-words",
+  "limit": 10,
+  "rows": [
+    {
+      "rank": 1,
+      "challenge": { "slug": "mirror-words", "title": "Challenge 002: Mirror Words" },
+      "user": { "handle": "Ada" },
+      "method": "VIBE",
+      "score": 100,
+      "selfTimeSec": 2520,
+      "runtimeMs": 1200,
+      "createdAt": "2024-01-01T12:00:00.000Z"
+    }
+  ]
+}
 ```
 
 ## POST /api/submissions
