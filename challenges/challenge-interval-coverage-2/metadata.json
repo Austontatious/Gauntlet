@@ -1,0 +1,9 @@
+{
+  "slug": "interval-coverage-2",
+  "title": "Challenge 105: Interval Coverage 2",
+  "shortDescription": "Compute covered integer points and maximum overlap for closed intervals.",
+  "difficulty": "advanced",
+  "category": "algorithms",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

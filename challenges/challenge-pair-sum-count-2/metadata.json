@@ -1,0 +1,9 @@
+{
+  "slug": "pair-sum-count-2",
+  "title": "Challenge 106: Pair Sum Count 2",
+  "shortDescription": "Answer multiple pair-sum count queries using frequency aggregation.",
+  "difficulty": "advanced",
+  "category": "algorithms",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

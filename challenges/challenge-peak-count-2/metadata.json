@@ -1,0 +1,9 @@
+{
+  "slug": "peak-count-2",
+  "title": "Challenge 103: Peak Count 2",
+  "shortDescription": "Count peak plateaus that are higher than their nearest different neighbors.",
+  "difficulty": "intermediate",
+  "category": "arrays",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

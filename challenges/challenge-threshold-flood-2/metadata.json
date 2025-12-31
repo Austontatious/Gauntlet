@@ -1,0 +1,9 @@
+{
+  "slug": "threshold-flood-2",
+  "title": "Challenge 108: Threshold Flood 2",
+  "shortDescription": "Answer many threshold flood queries using offline union-find.",
+  "difficulty": "expert",
+  "category": "graphs",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

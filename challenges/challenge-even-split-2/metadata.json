@@ -1,0 +1,9 @@
+{
+  "slug": "even-split-2",
+  "title": "Challenge 102: Even Split 2",
+  "shortDescription": "Split a total into n parts with locked indices and the remaining values as even as possible.",
+  "difficulty": "intermediate",
+  "category": "arrays",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

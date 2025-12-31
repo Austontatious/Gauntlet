@@ -1,0 +1,9 @@
+{
+  "slug": "mirror-words-2",
+  "title": "Challenge 101: Mirror Words 2",
+  "shortDescription": "Reverse words and quoted phrases while preserving token order and quoted spacing.",
+  "difficulty": "intermediate",
+  "category": "strings",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}

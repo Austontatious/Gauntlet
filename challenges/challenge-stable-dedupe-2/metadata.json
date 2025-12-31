@@ -1,0 +1,9 @@
+{
+  "slug": "stable-dedupe-2",
+  "title": "Challenge 104: Stable Dedupe 2",
+  "shortDescription": "Deduplicate by lowercased key while keeping the first original string.",
+  "difficulty": "advanced",
+  "category": "strings",
+  "maxRuntimeMs": 5000,
+  "scoring": { "correctness": true, "buildTime": true, "executionTime": false }
+}
